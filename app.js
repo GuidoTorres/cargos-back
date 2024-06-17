@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 var cors = require("cors");
 const sequelize = require("./config/database");
@@ -8,6 +9,8 @@ const ubicacionRouter = require("./src/routes/ubicacion_fisica");
 const usuarioRouter = require("./src/routes/usuario_final");
 const asignacionRouter = require("./src/routes/asignaciones");
 const ejecutoraRouter = require("./src/routes/unidad_ejecutora")
+const authRouter = require("./src/routes/auth")
+const usuarioAuthRouter = require("./src/routes/usuario")
 
 const app = express();
 const port = 3001;
@@ -21,6 +24,8 @@ app.use("/api/v1/ubicacion", ubicacionRouter);
 app.use("/api/v1/usuario", usuarioRouter);
 app.use("/api/v1/asignacion", asignacionRouter);
 app.use("/api/v1/ejecutora", ejecutoraRouter);
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/usuarioAuth", usuarioAuthRouter);
 
 
 sequelize

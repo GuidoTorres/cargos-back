@@ -8,7 +8,6 @@ const getData = async (req, res, next) => {
         where:{CENTRO_COSTO: centro, ano_eje: anio},
     });
 
-
     return res.status(200).json({ data: {costo:get} });
   } catch (error) {
     res.status(500).json();
