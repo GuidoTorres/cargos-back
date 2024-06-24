@@ -92,7 +92,7 @@ const getData = async (req, res) => {
       }
     });
 
-    const format = filteredUsers.map((item) => {
+    let format = filteredUsers.map((item) => {
       return {
         ...item,
         fecha_asig: dayjs.utc(item.fecha_asig).format("DD-MM-YYYY"),
