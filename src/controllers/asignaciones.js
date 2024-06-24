@@ -104,10 +104,10 @@ const getData = async (req, res) => {
       format = busqueda
         ? format.filter(
             (item) =>
-              item.nro_interno.toString().toLowerCase().includes(busqueda) ||
-              item.de_usuario.toLowerCase().includes(busqueda) ||
-              item.para_usuario.toLowerCase().includes(busqueda) ||
-              item.observaciones.toLowerCase().includes(busqueda)
+              item.nro_interno.toString()?.toLowerCase()?.includes(busqueda) ||
+              item?.de_usuario?.toLowerCase()?.includes(busqueda) ||
+              item?.para_usuario?.toLowerCase()?.includes(busqueda) ||
+              item?.observaciones?.toLowerCase()?.includes(busqueda)
           )
         : format;
     }
