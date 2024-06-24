@@ -11,7 +11,7 @@ const getData = async (req, res) => {
     let { inicio, fin, search } = req.query;
     const inicial = inicio || "2020-01-01";
     const final = fin || "2024-12-31";
-    const busqueda = search ? `%${search}%` : "%";
+    const busqueda = search ? search.toLowerCase() : "";
 
     const sqlQuery = `
     SELECT DISTINCT 
@@ -72,13 +72,7 @@ const getData = async (req, res) => {
               )
           )
       )
-      AND (
-          sa.nro_interno LIKE :search
-          OR spa.nombre_completo LIKE :search
-          OR spb.nombre_completo LIKE :search
-          OR spc.nombre_completo LIKE :search
-          OR spd.nombre_completo LIKE :search
-      )
+      ORDER BY sa.fecha_asig DESC, sa.secuencia ASC
     `;
 
     const users = await sequelize.query(sqlQuery, {
@@ -105,6 +99,18 @@ const getData = async (req, res) => {
         fecha_asigna: dayjs.utc(item.fecha_asig).format("YYYY-MM-DD"),
       };
     });
+
+    if (busqueda !== "") {
+      format = busqueda
+        ? format.filter(
+            (item) =>
+              item.nro_interno.toLowerCase().includes(busqueda) ||
+              item.de_usuario.toLowerCase().includes(busqueda) ||
+              item.para_usuario.toLowerCase().includes(busqueda) ||
+              item.observaciones.toLowerCase().includes(busqueda)
+          )
+        : format;
+    }
 
     return res.status(200).json({ data: format });
   } catch (error) {
@@ -288,8 +294,6 @@ const getDataBienes = async (req, res) => {
         AND ((1 = 0) OR (sig_asignaciones.nro_interno = 1)) 
         AND (('S' = 'N') OR ('S' = 'S' AND sig_asignaciones.fecha_asig = :fecha))
     `;
-    
-    
 
     const bienes = await sequelize.query(sqlQuery, {
       replacements: {

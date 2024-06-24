@@ -10,9 +10,12 @@ const sequelize = new Sequelize('siga_mef', 'siga_1137', 's1g@*1137', {
       trustServerCertificate: true // Solo necesario si estás usando un certificado autofirmado
     }
   },
-  logging: false // Desactiva el logging si prefieres
+  logging: true // Desactiva el logging si prefieres
 });
 
 initModels(sequelize)
+
+
+
 
 module.exports = sequelize;
