@@ -100,11 +100,11 @@ const getData = async (req, res) => {
       };
     });
 
-    if (busqueda !== "") {
+    if (busqueda) {
       format = busqueda
         ? format.filter(
             (item) =>
-              item.nro_interno.toLowerCase().includes(busqueda) ||
+              item.nro_interno.toString().toLowerCase().includes(busqueda) ||
               item.de_usuario.toLowerCase().includes(busqueda) ||
               item.para_usuario.toLowerCase().includes(busqueda) ||
               item.observaciones.toLowerCase().includes(busqueda)
