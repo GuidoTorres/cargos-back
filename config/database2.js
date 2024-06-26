@@ -10,7 +10,7 @@ const sequelize2 =  new Sequelize('planilla', 'sa', 'R3pr3s4sLl3n4s', {
         trustServerCertificate: true // Solo necesario si estás usando un certificado autofirmado
       }
     },
-    logging: true // Desactiva el logging si prefieres
+    logging: false // Desactiva el logging si prefieres
   });
   
   initModels2(sequelize2)

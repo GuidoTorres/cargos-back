@@ -31,6 +31,7 @@ const getData = async (req, res) => {
       sa.cod_ubicac,
       sa.centro_entrega,
       sa.tipo_ubicac,
+      sa.id_correlativo,
       (CASE WHEN 'S'='S' THEN sa.empleado_final ELSE sa.empleado END) AS de_cod_usuario,   
       (CASE WHEN 'S'='S' THEN sa.empleado_final_entr ELSE sa.empleado_entrega END) AS para_cod_usuario,
       CAST(sa.observaciones AS varchar(max)) AS observaciones  
@@ -377,8 +378,8 @@ const actualizarCorrelativos = async (req, res, next) => {
   try {
     const currentYear = new Date().getFullYear();
 
-    // Obtener el último correlativo del año actual
-    const ultimoCorrelativo = await models.SIG_ASIGNACIONES.max(
+    // Obtener el último correlativo del año actual, si existe
+    const ultimoCorrelativoStr = await models.SIG_ASIGNACIONES.max(
       "ID_CORRELATIVO",
       {
         where: sequelize.where(
@@ -388,7 +389,10 @@ const actualizarCorrelativos = async (req, res, next) => {
       }
     );
 
-    console.log("Último correlativo:", ultimoCorrelativo);
+    // Convertir el último correlativo a número, si existe, o iniciar en 0
+    const ultimoCorrelativo = ultimoCorrelativoStr
+      ? parseInt(ultimoCorrelativoStr, 10)
+      : 0;
 
     // Obtener registros sin correlativo del año actual
     const registrosSinCorrelativo = await models.SIG_ASIGNACIONES.findAll({
@@ -415,12 +419,16 @@ const actualizarCorrelativos = async (req, res, next) => {
       return acc;
     }, {});
 
-    let nuevoCorrelativo = ultimoCorrelativo || 0;
+    let nuevoCorrelativo = ultimoCorrelativo;
 
     // Asignar nuevos correlativos por grupo
     for (const key in grupos) {
-      nuevoCorrelativo += 1;
+      console.log(
+        `Procesando grupo: ${key} con ${grupos[key].length} registros`
+      );
       for (const registro of grupos[key]) {
+        nuevoCorrelativo += 1;
+
         const condiciones = {
           ANO_EJE: registro.ANO_EJE,
           SEC_EJEC: registro.SEC_EJEC,
@@ -430,7 +438,7 @@ const actualizarCorrelativos = async (req, res, next) => {
         };
 
         const resultado = await models.SIG_ASIGNACIONES.update(
-          { ID_CORRELATIVO: nuevoCorrelativo },
+          { ID_CORRELATIVO: nuevoCorrelativo.toString() }, // Convertir a cadena
           { where: condiciones }
         );
       }
@@ -447,7 +455,9 @@ const actualizarCorrelativos = async (req, res, next) => {
           currentYear
         ),
       },
-      order: [["ID_CORRELATIVO", "ASC"]],
+      order: [
+        [sequelize.cast(sequelize.col("ID_CORRELATIVO"), "INTEGER"), "ASC"],
+      ],
     });
 
     res.status(200).json({
@@ -462,8 +472,6 @@ const actualizarCorrelativos = async (req, res, next) => {
       .json({ message: "Error al generar los correlativos", error });
   }
 };
-
-module.exports = actualizarCorrelativos;
 
 module.exports = {
   getData,
