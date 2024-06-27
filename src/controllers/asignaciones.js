@@ -126,7 +126,7 @@ module.exports = getData;
 
 const getDataBienes = async (req, res) => {
   try {
-    let { cod_usuario, fecha_asig } = req.query;
+    let { cod_usuario, fecha_asig, nro_interno } = req.query;
     const fecha = dayjs.utc(fecha_asig).format("DD-MM-YYYY");
     const sqlQuery = `
     SELECT 
@@ -292,7 +292,7 @@ const getDataBienes = async (req, res) => {
         AND sig_movimiento_activo.tipo_movimto = sig_detalle_activos.tipo_movimto 
         AND sig_movimiento_activo.nro_movimto = sig_detalle_activos.nro_movimto 
         AND sig_asignaciones.empleado_final_entr = :cod2 
-        AND ((1 = 0) OR (sig_asignaciones.nro_interno = 1)) 
+        AND ((1 = 0) OR (sig_asignaciones.nro_interno = :nro)) 
         AND (('S' = 'N') OR ('S' = 'S' AND sig_asignaciones.fecha_asig = :fecha))
     `;
 
@@ -301,6 +301,7 @@ const getDataBienes = async (req, res) => {
         cod: cod_usuario,
         cod2: cod_usuario,
         fecha: fecha_asig,
+        nro:nro_interno
       },
       type: QueryTypes.SELECT,
     });
