@@ -6,6 +6,7 @@ const {models} = require('./../../config/database')
 
 router.get("/", asignaciones.getData)
 router.get("/bienes", asignaciones.getDataBienes)
+router.get("/prueba", asignaciones.detectarCorrelativosDuplicados)
 router.put("/actualizar", asignaciones.actualizarCorrelativos)
 router.put('/probar-correlativos', async (req, res) => {
     const t = await sequelize.transaction();

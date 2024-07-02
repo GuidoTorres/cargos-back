@@ -126,7 +126,7 @@ module.exports = getData;
 
 const getDataBienes = async (req, res) => {
   try {
-    let { cod_usuario, fecha_asig, nro_interno } = req.query;
+    let { cod_usuario, fecha_asig } = req.query;
     const fecha = dayjs.utc(fecha_asig).format("DD-MM-YYYY");
     const sqlQuery = `
     SELECT 
@@ -292,7 +292,7 @@ const getDataBienes = async (req, res) => {
         AND sig_movimiento_activo.tipo_movimto = sig_detalle_activos.tipo_movimto 
         AND sig_movimiento_activo.nro_movimto = sig_detalle_activos.nro_movimto 
         AND sig_asignaciones.empleado_final_entr = :cod2 
-        AND ((1 = 0) OR (sig_asignaciones.nro_interno = :nro)) 
+        AND ((1 = 0) OR (sig_asignaciones.nro_interno = 1)) 
         AND (('S' = 'N') OR ('S' = 'S' AND sig_asignaciones.fecha_asig = :fecha))
     `;
 
@@ -301,7 +301,6 @@ const getDataBienes = async (req, res) => {
         cod: cod_usuario,
         cod2: cod_usuario,
         fecha: fecha_asig,
-        nro:nro_interno
       },
       type: QueryTypes.SELECT,
     });
@@ -381,14 +380,16 @@ const actualizarCorrelativos = async (req, res, next) => {
 
     // Obtener el último correlativo del año actual, si existe
     const ultimoCorrelativoStr = await models.SIG_ASIGNACIONES.max(
-      "ID_CORRELATIVO",
+      sequelize.cast(sequelize.col("ID_CORRELATIVO"), "INTEGER"),
       {
         where: sequelize.where(
-          sequelize.fn("YEAR", sequelize.col("fecha_asig")),
+          sequelize.fn("YEAR", sequelize.col("FECHA_ASIG")),
           currentYear
         ),
       }
     );
+
+    console.log(ultimoCorrelativoStr);
 
     // Convertir el último correlativo a número, si existe, o iniciar en 0
     const ultimoCorrelativo = ultimoCorrelativoStr
@@ -400,19 +401,22 @@ const actualizarCorrelativos = async (req, res, next) => {
       where: {
         ID_CORRELATIVO: null,
         [Op.and]: sequelize.where(
-          sequelize.fn("YEAR", sequelize.col("fecha_asig")),
+          sequelize.fn("YEAR", sequelize.col("FECHA_ASIG")),
           currentYear
         ),
       },
       order: [
-        ["fecha_asig", "ASC"],
+        ["FECHA_ASIG", "ASC"],
         ["SECUENCIA", "ASC"],
       ],
     });
 
-    // Agrupar registros por empleado_final y fecha_asig
+    // Agrupar registros por empleado_final, empleado, empleado_final_entr, empleado_entrega y fecha_asig
     const grupos = registrosSinCorrelativo.reduce((acc, registro) => {
-      const key = `${registro.EMPLEADO_FINAL}-${registro.FECHA_ASIG}`;
+      const fecha_asig_str = new Date(registro.FECHA_ASIG)
+        .toISOString()
+        .split("T")[0];
+      const key = `${registro.EMPLEADO_FINAL}-${registro.EMPLEADO}-${registro.EMPLEADO_FINAL_ENTR}-${registro.EMPLEADO_ENTREGA}-${fecha_asig_str}`;
       if (!acc[key]) {
         acc[key] = [];
       }
@@ -434,12 +438,12 @@ const actualizarCorrelativos = async (req, res, next) => {
           ANO_EJE: registro.ANO_EJE,
           SEC_EJEC: registro.SEC_EJEC,
           TIPO_MODALIDAD: registro.TIPO_MODALIDAD,
-          SECUENCIA: registro.SECUENCIA,
+          SECUENCIA: registro.SEQUENCE,
           NRO_ASIGNAC: registro.NRO_ASIGNAC,
         };
 
-        const resultado = await models.SIG_ASIGNACIONES.update(
-          { ID_CORRELATIVO: nuevoCorrelativo.toString() }, // Convertir a cadena
+        await models.SIG_ASIGNACIONES.update(
+          { ID_CORRELATIVO: nuevoCorrelativo.toString() },
           { where: condiciones }
         );
       }
@@ -452,7 +456,7 @@ const actualizarCorrelativos = async (req, res, next) => {
           [Op.ne]: null,
         },
         [Op.and]: sequelize.where(
-          sequelize.fn("YEAR", sequelize.col("fecha_asig")),
+          sequelize.fn("YEAR", sequelize.col("FECHA_ASIG")),
           currentYear
         ),
       },
@@ -474,9 +478,31 @@ const actualizarCorrelativos = async (req, res, next) => {
   }
 };
 
+const detectarCorrelativosDuplicados = async (req, res, next) => {
+  try {
+    const targetSecuencia = 15112; // La secuencia específica que deseas actualizar
+
+    // Actualizar el campo ID_CORRELATIVO a null para los registros con la secuencia específica
+    await models.SIG_ASIGNACIONES.update(
+      { ID_CORRELATIVO: null },
+      { where: { SECUENCIA: targetSecuencia } }
+    );
+
+    res.status(200).json({
+      msg: `ID_CORRELATIVO actualizado a null para registros con SECUENCIA = ${targetSecuencia}`,
+    });
+  } catch (error) {
+    console.error("Error al actualizar los correlativos:", error);
+    res
+      .status(500)
+      .json({ message: "Error al actualizar los correlativos", error });
+  }
+};
+
 module.exports = {
   getData,
   getDataBienes,
   updateObservacion,
   actualizarCorrelativos,
+  detectarCorrelativosDuplicados,
 };
