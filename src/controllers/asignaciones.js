@@ -1,4 +1,4 @@
-const { Op, QueryTypes } = require("sequelize");
+const { Op, QueryTypes, where } = require("sequelize");
 const sequelize = require("../../config/database");
 const { models } = require("./../../config/database");
 const dayjs = require("dayjs");
@@ -126,7 +126,7 @@ module.exports = getData;
 
 const getDataBienes = async (req, res) => {
   try {
-    let { cod_usuario, fecha_asig, } = req.query;
+    let { cod_usuario, fecha_asig } = req.query;
     const fecha = dayjs.utc(fecha_asig).format("DD-MM-YYYY");
     const sqlQuery = `
     SELECT 
@@ -375,111 +375,114 @@ const updateObservacion = async (req, res, next) => {
 };
 
 const actualizarCorrelativos = async (req, res, next) => {
-    try {
-      const currentYear = new Date().getFullYear();
-  
-      // Obtener el último correlativo del año actual, si existe
-      const ultimoCorrelativoStr = await models.SIG_ASIGNACIONES.max(
-        "ID_CORRELATIVO",
-        {
-          where: sequelize.where(
-            sequelize.fn("YEAR", sequelize.col("fecha_asig")),
-            currentYear
-          ),
-        }
-      );
-  
-      // Convertir el último correlativo a número, si existe, o iniciar en 0
-      const ultimoCorrelativo = ultimoCorrelativoStr
-        ? parseInt(ultimoCorrelativoStr, 10)
-        : 0;
-  
-      // Obtener registros sin correlativo del año actual
-      const registrosSinCorrelativo = await models.SIG_ASIGNACIONES.findAll({
-        where: {
-          ID_CORRELATIVO: null,
-          [Op.and]: sequelize.where(
-            sequelize.fn("YEAR", sequelize.col("fecha_asig")),
-            currentYear
-          ),
-        },
-        order: [
-          ["fecha_asig", "ASC"],
-          ["SECUENCIA", "ASC"],
-        ],
-      });
-  
-      // Agrupar registros por empleado_final y fecha_asig
-      const grupos = registrosSinCorrelativo.reduce((acc, registro) => {
-        const fecha_asig_str = new Date(registro.FECHA_ASIG).toISOString().split('T')[0]; // Asegurarse de que la fecha esté en formato ISO (YYYY-MM-DD)
-        const key = `${registro.EMPLEADO_FINAL}-${fecha_asig_str}`;
-        if (!acc[key]) {
-          acc[key] = [];
-        }
-        acc[key].push(registro);
-        return acc;
-      }, {});
-  
-      let nuevoCorrelativo = ultimoCorrelativo;
-  
-      // Asignar nuevos correlativos por grupo
-      for (const key in grupos) {
-        console.log(
-          `Procesando grupo: ${key} con ${grupos[key].length} registros`
-        );
-        for (const registro of grupos[key]) {
-          nuevoCorrelativo += 1;
-  
-          const condiciones = {
-            ANO_EJE: registro.ANO_EJE,
-            SEC_EJEC: registro.SEC_EJEC,
-            TIPO_MODALIDAD: registro.TIPO_MODALIDAD,
-            SECUENCIA: registro.SECUENCIA,
-            NRO_ASIGNAC: registro.NRO_ASIGNAC,
-          };
-  
-          const resultado = await models.SIG_ASIGNACIONES.update(
-            { ID_CORRELATIVO: nuevoCorrelativo.toString() }, // Convertir a cadena
-            { where: condiciones }
-          );
-        }
-      }
-  
-      // Verificar los registros actualizados
-      const registrosActualizados = await models.SIG_ASIGNACIONES.findAll({
-        where: {
-          ID_CORRELATIVO: {
-            [Op.ne]: null,
-          },
-          [Op.and]: sequelize.where(
-            sequelize.fn("YEAR", sequelize.col("fecha_asig")),
-            currentYear
-          ),
-        },
-        order: [
-          [sequelize.cast(sequelize.col("ID_CORRELATIVO"), "INTEGER"), "ASC"],
-        ],
-      });
-  
-      res.status(200).json({
-        msg: "Correlativos generados correctamente.",
-        total: registrosSinCorrelativo.length,
-        actualizaciones: registrosActualizados,
-      });
-    } catch (error) {
-      console.error("Error al generar los correlativos:", error);
-      res
-        .status(500)
-        .json({ message: "Error al generar los correlativos", error });
-    }
-  };
+  try {
+    const currentYear = new Date().getFullYear();
 
-  
-  
+    // Obtener el último correlativo del año actual, si existe
+    const ultimoCorrelativoRegistro = await models.SIG_ASIGNACIONES.findOne({
+      attributes: ["ID_CORRELATIVO", "SECUENCIA"],
+      where: {
+        ID_CORRELATIVO: {
+          [Op.ne]: null,
+        },
+      },
+      order: [["SECUENCIA", "DESC"]],
+    });
+    console.log(ultimoCorrelativoRegistro);
+    // Convertir el último correlativo a número, si existe, o iniciar en 0
+    let ultimoCorrelativo = ultimoCorrelativoRegistro
+      ? parseInt(ultimoCorrelativoRegistro.ID_CORRELATIVO)
+      : 0;
+
+    // Obtener registros sin correlativo del año actual
+    const registrosSinCorrelativo = await models.SIG_ASIGNACIONES.findAll({
+      where: {
+        ID_CORRELATIVO: null,
+        [Op.and]: sequelize.where(
+          sequelize.fn("YEAR", sequelize.col("FECHA_ASIG")),
+          currentYear
+        ),
+      },
+      order: [
+        ["FECHA_ASIG", "ASC"],
+        ["SECUENCIA", "ASC"],
+      ],
+    });
+
+    // Agrupar registros por empleado_final, empleado, empleado_final_entr, empleado_entrega y fecha_asig
+    const grupos = registrosSinCorrelativo.reduce((acc, registro) => {
+      const fecha_asig_str = new Date(registro.FECHA_ASIG)
+        .toISOString()
+        .split("T")[0];
+      const key = `${registro.EMPLEADO_FINAL}-${registro.EMPLEADO}-${registro.EMPLEADO_FINAL_ENTR}-${registro.EMPLEADO_ENTREGA}-${fecha_asig_str}`;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(registro);
+      return acc;
+    }, {});
+
+    // Asignar nuevos correlativos por grupo
+    for (const key in grupos) {
+      console.log(
+        `Procesando grupo: ${key} con ${grupos[key].length} registros`
+      );
+      for (const registro of grupos[key]) {
+        ultimoCorrelativo += 1;
+
+        const condiciones = {
+          ANO_EJE: registro.ANO_EJE,
+          SEC_EJEC: registro.SEC_EJEC,
+          TIPO_MODALIDAD: registro.TIPO_MODALIDAD,
+          SECUENCIA: registro.SECUENCIA,
+          NRO_ASIGNAC: registro.NRO_ASIGNAC,
+        };
+
+        await models.SIG_ASIGNACIONES.update(
+          { ID_CORRELATIVO: ultimoCorrelativo.toString() }, // Convertir a cadena
+          { where: condiciones }
+        );
+      }
+    }
+
+    res.status(200).json({
+      msg: "Correlativos generados correctamente.",
+    });
+  } catch (error) {
+    console.error("Error al generar los correlativos:", error);
+    res
+      .status(500)
+      .json({ message: "Error al generar los correlativos", error });
+  }
+};
+
+const resetearCorrelativos = async (req, res, next) => {
+  try {
+    // Actualizar el campo ID_CORRELATIVO a null para los registros con la secuencia específica
+    await models.SIG_ASIGNACIONES.update(
+      { ID_CORRELATIVO: "127" },
+      {
+        where: {
+          SECUENCIA: 15121,
+        },
+      }
+    );
+
+    res.status(200).json({
+      msg: "ok",
+    });
+  } catch (error) {
+    console.error("Error al actualizar los correlativos:", error);
+    res
+      .status(500)
+      .json({ message: "Error al actualizar los correlativos", error });
+  }
+};
 
 module.exports = {
   getData,
   getDataBienes,
   updateObservacion,
   actualizarCorrelativos,
+  resetearCorrelativos,
 };
