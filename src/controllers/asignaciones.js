@@ -14,27 +14,29 @@ const getData = async (req, res) => {
     const busqueda = search ? search.toLowerCase() : "";
 
     const sqlQuery = `
-    SELECT DISTINCT 
-      sa.nro_interno,   
-      (CASE WHEN 'S'='S' THEN spa.nombre_completo ELSE spc.nombre_completo END) AS de_usuario,   
-      (CASE WHEN 'S'='S' THEN spb.nombre_completo ELSE spd.nombre_completo END) AS para_usuario,   
-      sa.fecha_asig,   
-      sa.sede_entrega,   
-      sa.pliego_entrega,  
+    SELECT 
+      sa.nro_interno,
+      (CASE WHEN 'S'='S' THEN spa.nombre_completo ELSE spc.nombre_completo END) AS de_usuario,
+      (CASE WHEN 'S'='S' THEN spb.nombre_completo ELSE spd.nombre_completo END) AS para_usuario,
+      sa.fecha_asig,
+      sa.sede_entrega,
+      sa.pliego_entrega,
       sa.id_correlativo,
       sa.secuencia,
-      sa.ano_eje, 
-      sa.sec_ejec, 
-      sa.tipo_modalidad, 
-      sa.nro_asignac, 
+      sa.ano_eje,
+      sa.sec_ejec,
+      sa.tipo_modalidad,
+      sa.nro_asignac,
       sa.centro_costo,
       sa.cod_ubicac,
       sa.centro_entrega,
       sa.tipo_ubicac,
       sa.id_correlativo,
-      (CASE WHEN 'S'='S' THEN sa.empleado_final ELSE sa.empleado END) AS de_cod_usuario,   
+      (CASE WHEN 'S'='S' THEN sa.empleado_final ELSE sa.empleado END) AS de_cod_usuario,
       (CASE WHEN 'S'='S' THEN sa.empleado_final_entr ELSE sa.empleado_entrega END) AS para_cod_usuario,
-      CAST(sa.observaciones AS varchar(max)) AS observaciones  
+      CAST(sa.observaciones AS varchar(max)) AS observaciones,
+      p.empleado_final AS patrimonio_empleado_final,
+      p.nro_orden AS patrimonio_nro_orden
     FROM sig_asignaciones sa
     JOIN sig_personal spa ON
         sa.sec_ejec = spa.sec_ejec AND  
@@ -48,12 +50,16 @@ const getData = async (req, res) => {
     JOIN sig_personal spd ON
         sa.sec_ejec = spd.sec_ejec AND 
         sa.empleado_entrega = spd.empleado 
+    JOIN sig_patrimonio p ON
+        sa.sec_ejec = p.sec_ejec AND
+        sa.secuencia = p.secuencia
     WHERE sa.ano_eje = 2024
       AND sa.sec_ejec = 1137
       AND sa.tipo_modalidad = 1
       AND sa.nro_interno IS NOT NULL
       AND sa.fecha_asig >= :inicial
       AND sa.fecha_asig <= :final
+      AND p.nro_orden IS NOT NULL
       AND (
           :search = '%' OR (
               :search <> '%' AND (
@@ -73,7 +79,7 @@ const getData = async (req, res) => {
               )
           )
       )
-      ORDER BY sa.fecha_asig DESC, sa.secuencia ASC
+    ORDER BY sa.fecha_asig DESC, sa.secuencia ASC
     `;
 
     const users = await sequelize.query(sqlQuery, {
@@ -81,19 +87,19 @@ const getData = async (req, res) => {
       type: QueryTypes.SELECT,
     });
 
-    // Filtrar duplicados basados en una combinación de columnas
-    const seen = new Set();
-    const filteredUsers = users.filter((user) => {
-      const key = `${user.nro_interno}-${user.fecha_asig}-${user.de_cod_usuario}-${user.para_cod_usuario}`;
-      if (seen.has(key)) {
-        return false;
-      } else {
-        seen.add(key);
-        return true;
+    // Agrupar registros por patrimonio_empleado_final y patrimonio_nro_orden
+    const grupos = users.reduce((acc, user) => {
+      const key = `${user.patrimonio_empleado_final}-${user.patrimonio_nro_orden}`;
+      if (!acc[key]) {
+        acc[key] = [];
       }
-    });
+      acc[key].push(user);
+      return acc;
+    }, {});
 
-    let format = filteredUsers.map((item) => {
+    // Tomar solo el primer registro de cada grupo
+    const format = Object.values(grupos).map(group => {
+      const item = group[0]; // Tomar el primer registro del grupo
       return {
         ...item,
         fecha_asig: dayjs.utc(item.fecha_asig).format("DD-MM-YYYY"),
@@ -102,15 +108,13 @@ const getData = async (req, res) => {
     });
 
     if (busqueda) {
-      format = busqueda
-        ? format.filter(
-            (item) =>
-              item.nro_interno.toString()?.toLowerCase()?.includes(busqueda) ||
-              item?.de_usuario?.toLowerCase()?.includes(busqueda) ||
-              item?.para_usuario?.toLowerCase()?.includes(busqueda) ||
-              item?.observaciones?.toLowerCase()?.includes(busqueda)
-          )
-        : format;
+      format = format.filter(
+        (item) =>
+          item.nro_interno.toString().toLowerCase().includes(busqueda) ||
+          item.de_usuario.toLowerCase().includes(busqueda) ||
+          item.para_usuario.toLowerCase().includes(busqueda) ||
+          item.observaciones.toLowerCase().includes(busqueda)
+      );
     }
 
     return res.status(200).json({ data: format });
@@ -122,7 +126,12 @@ const getData = async (req, res) => {
   }
 };
 
-module.exports = getData;
+module.exports = { getData };
+
+
+module.exports = { getData };
+
+
 
 const getDataBienes = async (req, res) => {
   try {
@@ -388,33 +397,55 @@ const actualizarCorrelativos = async (req, res, next) => {
       },
       order: [["SECUENCIA", "DESC"]],
     });
-    console.log(ultimoCorrelativoRegistro);
-    // Convertir el último correlativo a número, si existe, o iniciar en 0
     let ultimoCorrelativo = ultimoCorrelativoRegistro
       ? parseInt(ultimoCorrelativoRegistro.ID_CORRELATIVO)
       : 0;
 
-    // Obtener registros sin correlativo del año actual
-    const registrosSinCorrelativo = await models.SIG_ASIGNACIONES.findAll({
-      where: {
-        ID_CORRELATIVO: null,
-        [Op.and]: sequelize.where(
-          sequelize.fn("YEAR", sequelize.col("FECHA_ASIG")),
-          currentYear
-        ),
-      },
-      order: [
-        ["FECHA_ASIG", "ASC"],
-        ["SECUENCIA", "ASC"],
-      ],
+    const sqlQuery = `
+    SELECT 
+    a.ANO_EJE,
+    a.SEC_EJEC,
+    a.TIPO_MODALIDAD,
+    a.SECUENCIA,
+    a.NRO_ASIGNAC,
+    a.FECHA_ASIG,
+    a.EMPLEADO_FINAL,
+    a.EMPLEADO,
+    a.EMPLEADO_FINAL_ENTR,
+    a.EMPLEADO_ENTREGA,
+    p.EMPLEADO_FINAL AS PATRIMONIO_EMPLEADO_FINAL,
+    p.NRO_ORDEN AS PATRIMONIO_NRO_ORDEN
+    FROM 
+      sig_asignaciones a
+    JOIN 
+      sig_patrimonio p 
+      ON a.sec_ejec = p.sec_ejec  
+      AND a.tipo_modalidad = p.tipo_modalidad 
+      AND a.secuencia = p.secuencia
+    WHERE 
+      YEAR(a.FECHA_ASIG) = :currentYear
+      AND p.NRO_ORDEN IS NOT NULL
+      AND a.ID_CORRELATIVO IS NULL
+    ORDER BY 
+      a.FECHA_ASIG ASC,
+      a.SECUENCIA ASC;
+  `;
+    // Convertir el último correlativo a número, si existe, o iniciar en 0
+    const registrosSinCorrelativo = await sequelize.query(sqlQuery, {
+      type: QueryTypes.SELECT,
+      replacements: { currentYear },
     });
 
-    // Agrupar registros por empleado_final, empleado, empleado_final_entr, empleado_entrega y fecha_asig
+    // Verificar si hay registros
+    if (registrosSinCorrelativo.length === 0) {
+      return res.status(404).json({
+        msg: "No se encontraron registros.",
+      });
+    }
+
+    // Agrupar registros por EMPLEADO_FINAL y PATRIMONIO_NRO_ORDEN
     const grupos = registrosSinCorrelativo.reduce((acc, registro) => {
-      const fecha_asig_str = new Date(registro.FECHA_ASIG)
-        .toISOString()
-        .split("T")[0];
-      const key = `${registro.EMPLEADO_FINAL}-${registro.EMPLEADO}-${registro.EMPLEADO_FINAL_ENTR}-${registro.EMPLEADO_ENTREGA}-${fecha_asig_str}`;
+      const key = `${registro.EMPLEADO_FINAL}-${registro.PATRIMONIO_NRO_ORDEN}`;
       if (!acc[key]) {
         acc[key] = [];
       }
@@ -422,14 +453,15 @@ const actualizarCorrelativos = async (req, res, next) => {
       return acc;
     }, {});
 
-    // Asignar nuevos correlativos por grupo
+    // Asignar nuevos correlativos por grupo y actualizar registros
     for (const key in grupos) {
-      console.log(
-        `Procesando grupo: ${key} con ${grupos[key].length} registros`
-      );
+      grupos[key].sort(
+        (a, b) => new Date(a.FECHA_ASIG) - new Date(b.FECHA_ASIG)
+      ); // Ordenar por FECHA_ASIG
+
       for (const registro of grupos[key]) {
         ultimoCorrelativo += 1;
-
+        console.log(registro);
         const condiciones = {
           ANO_EJE: registro.ANO_EJE,
           SEC_EJEC: registro.SEC_EJEC,
@@ -455,15 +487,14 @@ const actualizarCorrelativos = async (req, res, next) => {
       .json({ message: "Error al generar los correlativos", error });
   }
 };
-
 const resetearCorrelativos = async (req, res, next) => {
   try {
     // Actualizar el campo ID_CORRELATIVO a null para los registros con la secuencia específica
     await models.SIG_ASIGNACIONES.update(
-      { ID_CORRELATIVO: "127" },
+      { ID_CORRELATIVO: null },
       {
         where: {
-          SECUENCIA: 15121,
+          ID_CORRELATIVO: { [Op.ne]: null },
         },
       }
     );
@@ -479,10 +510,113 @@ const resetearCorrelativos = async (req, res, next) => {
   }
 };
 
+const obtenerRegistrosConPatrimonio = async (req, res, next) => {
+  try {
+    const currentYear = new Date().getFullYear();
+
+    // Obtener el último correlativo del año actual, si existe
+    const ultimoCorrelativoRegistro = await models.SIG_ASIGNACIONES.findOne({
+      attributes: ["ID_CORRELATIVO", "SECUENCIA"],
+      where: {
+        ID_CORRELATIVO: {
+          [Op.ne]: null,
+        },
+      },
+      order: [["SECUENCIA", "DESC"]],
+    });
+
+    // Obtener registros del año actual incluyendo datos de sig_patrimonio
+    const sqlQuery = `
+      SELECT 
+        a.ANO_EJE,
+        a.SEC_EJEC,
+        a.TIPO_MODALIDAD,
+        a.SECUENCIA,
+        a.NRO_ASIGNAC,
+        a.FECHA_ASIG,
+        a.EMPLEADO_FINAL,
+        a.EMPLEADO,
+        a.EMPLEADO_FINAL_ENTR,
+        a.EMPLEADO_ENTREGA,
+        p.EMPLEADO_FINAL AS PATRIMONIO_EMPLEADO_FINAL,
+        p.NRO_ORDEN AS PATRIMONIO_NRO_ORDEN
+      FROM 
+        sig_asignaciones a
+      JOIN 
+        sig_patrimonio p 
+        ON a.sec_ejec = p.sec_ejec  
+        AND a.tipo_modalidad = p.tipo_modalidad 
+        AND a.secuencia = p.secuencia
+      WHERE 
+        YEAR(a.FECHA_ASIG) = :currentYear
+        AND p.NRO_ORDEN IS NOT NULL
+      ORDER BY 
+        a.FECHA_ASIG ASC,
+        a.SECUENCIA ASC;
+    `;
+    let correlativo = ultimoCorrelativoRegistro
+      ? parseInt(ultimoCorrelativoRegistro.ID_CORRELATIVO)
+      : 0;
+    const registros = await sequelize.query(sqlQuery, {
+      type: QueryTypes.SELECT,
+      replacements: { currentYear },
+    });
+
+    // Verificar si hay registros
+    if (registros.length === 0) {
+      return res.status(404).json({
+        msg: "No se encontraron registros.",
+      });
+    }
+
+    // Agrupar registros por EMPLEADO_FINAL y PATRIMONIO_NRO_ORDEN
+    const grupos = registros.reduce((acc, registro) => {
+      const key = `${registro.EMPLEADO_FINAL}-${registro.PATRIMONIO_NRO_ORDEN}`;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(registro);
+      return acc;
+    }, {});
+
+    console.log(grupos);
+
+
+    for (const key in grupos) {
+      const correlativoGrupo = ++correlativo;
+
+      for (const registro of grupos[key]) {
+        const condiciones = {
+          ANO_EJE: registro.ANO_EJE,
+          SEC_EJEC: registro.SEC_EJEC,
+          TIPO_MODALIDAD: registro.TIPO_MODALIDAD,
+          SECUENCIA: registro.SECUENCIA,
+          NRO_ASIGNAC: registro.NRO_ASIGNAC,
+        };
+
+        await models.SIG_ASIGNACIONES.update(
+          { ID_CORRELATIVO: correlativoGrupo.toString() }, // Convertir a cadena
+          { where: condiciones }
+        );
+      }
+    }
+
+    res.status(200).json({
+      msg: "Correlativos generados correctamente.",
+    });
+  } catch (error) {
+    console.error("Error al generar los correlativos:", error);
+    res
+      .status(500)
+      .json({ message: "Error al generar los correlativos", error });
+  }
+};
+
 module.exports = {
   getData,
   getDataBienes,
   updateObservacion,
   actualizarCorrelativos,
   resetearCorrelativos,
+  obtenerRegistrosConPatrimonio,
 };
