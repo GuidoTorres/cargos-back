@@ -3,4 +3,4 @@ const planilla = require("../controllers/planillaUsuarios");
 
 router.get("/", planilla.getData)
 
-module.exports = router
+module.exports = router 
