@@ -1,8 +1,8 @@
 const { Sequelize } = require('sequelize');
 const initModels = require('../models3/init_models');
 
-const sequelize3 =  new Sequelize('adeudos', 'root', 'root', {
-    host: '127.0.0.1',
+const sequelize3 =  new Sequelize('adeudos', 'usuario', 'root', {
+    host: '10.30.1.43',
     dialect: 'mysql',
   });
   

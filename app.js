@@ -14,7 +14,7 @@ const ejecutoraRouter = require("./src/routes/unidad_ejecutora");
 const authRouter = require("./src/routes/auth");
 const usuarioAuthRouter = require("./src/routes/usuario");
 const planillaRouter = require("./src/routes/planillaUsuarios");
-const adeudoRouter = require("./src/routes/adeudo");
+const etiquetaRouter = require("./src/routes/etiquetas");
 const app = express();
 const port = 3001;
 const port2 = 3002;
@@ -33,7 +33,7 @@ app.use("/api/v1/ejecutora", ejecutoraRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/usuarioAuth", usuarioAuthRouter);
 app.use("/api/v1/planilla", planillaRouter);
-app.use("/api/v1/adeudo", adeudoRouter);
+app.use("/api/v1/etiqueta", etiquetaRouter);
 
 
 sequelize
