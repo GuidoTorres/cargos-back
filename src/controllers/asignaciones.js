@@ -396,13 +396,14 @@ const actualizarCorrelativos = async (req, res, next) => {
           [Op.ne]: null,
         },
       },
-      order: [["ID_CORRELATIVO", "DESC"]],
+      order: [["SECUENCIA", "DESC"]],
     });
 
     let correlativo = ultimoCorrelativoRegistro
       ? parseInt(ultimoCorrelativoRegistro.ID_CORRELATIVO)
       : 0;
 
+    console.log(correlativo);
 
     // Obtener registros del año actual incluyendo datos de sig_patrimonio
     const sqlQuery = `
@@ -447,9 +448,9 @@ const actualizarCorrelativos = async (req, res, next) => {
       });
     }
 
-    // Agrupar registros por EMPLEADO_FINAL y PATRIMONIO_NRO_ORDEN
+    // Agrupar registros por EMPLEADO_FINAL, PATRIMONIO_NRO_ORDEN y FECHA_ASIG
     const grupos = registros.reduce((acc, registro) => {
-      const key = `${registro.EMPLEADO_FINAL}-${registro.PATRIMONIO_NRO_ORDEN}`;
+      const key = `${registro.EMPLEADO_FINAL}-${registro.PATRIMONIO_NRO_ORDEN}-${registro.FECHA_ASIG}`;
       if (!acc[key]) {
         acc[key] = [];
       }
@@ -458,7 +459,7 @@ const actualizarCorrelativos = async (req, res, next) => {
     }, {});
 
     for (const key in grupos) {
-      correlativo += 1; // Incrementar correlativo para cada grupo
+      correlativo += 1; // Incrementar correlativo para cada nuevo grupo
 
       const registrosGrupo = grupos[key];
       for (const registro of registrosGrupo) {
@@ -490,6 +491,7 @@ const actualizarCorrelativos = async (req, res, next) => {
 };
 
 
+
 const resetearCorrelativos = async (req, res, next) => {
   try {
     // Actualizar el campo ID_CORRELATIVO a null para los registros con la secuencia específica
@@ -497,7 +499,7 @@ const resetearCorrelativos = async (req, res, next) => {
       { ID_CORRELATIVO: null },
       {
         where: {
-          ID_CORRELATIVO: { [Op.ne]: null },
+          SECUENCIA: 15157,
         },
       }
     );
@@ -573,7 +575,7 @@ const obtenerRegistrosConPatrimonio = async (req, res, next) => {
 
     // Agrupar registros por EMPLEADO_FINAL y PATRIMONIO_NRO_ORDEN
     const grupos = registros.reduce((acc, registro) => {
-      const key = `${registro.EMPLEADO_FINAL}-${registro.PATRIMONIO_NRO_ORDEN}`;
+      const key = `${registro.EMPLEADO_FINAL}-${registro.PATRIMONIO_NRO_ORDEN}-${registro.FECHA_ASIG}`;
       if (!acc[key]) {
         acc[key] = [];
       }
