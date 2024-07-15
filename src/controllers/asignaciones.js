@@ -403,7 +403,6 @@ const actualizarCorrelativos = async (req, res, next) => {
       ? parseInt(ultimoCorrelativoRegistro.ID_CORRELATIVO)
       : 0;
 
-    console.log(correlativo);
 
     // Obtener registros del año actual incluyendo datos de sig_patrimonio
     const sqlQuery = `

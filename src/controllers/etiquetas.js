@@ -23,7 +23,8 @@ const getEtiquetas = async (req, res) => {
         sig_patrimonio.codigo_activo,   
         sig_patrimonio.codigo_barra,   
         sig_patrimonio.descripcion,   
-        sig_patrimonio.nro_serie  
+        sig_patrimonio.nro_serie,
+        sig_patrimonio.nro_orden
     FROM 
         sig_patrimonio
     JOIN 
@@ -86,7 +87,8 @@ const getEtiquetas = async (req, res) => {
         sig_patrimonio.codigo_activo,   
         sig_patrimonio.codigo_barra,   
         sig_patrimonio.descripcion,   
-        sig_patrimonio.nro_serie  
+        sig_patrimonio.nro_serie,
+        sig_patrimonio.nro_orden  
     FROM 
         sig_patrimonio
     JOIN 
@@ -177,188 +179,188 @@ const getEtiquetas = async (req, res) => {
   }
 };
 
-const prueba = async (req, res, next) => {
-  try {
-    // Obtener registros del año actual incluyendo datos de sig_patrimonio
-    const sqlQuery = `
+// const prueba = async (req, res, next) => {
+//   try {
+//     // Obtener registros del año actual incluyendo datos de sig_patrimonio
+//     const sqlQuery = `
 
-    SELECT DISTINCT 
-    sig_patrimonio.secuencia,   
-    sig_patrimonio.codigo_activo,   
-    sig_patrimonio.codigo_barra,   
-    sig_patrimonio.descripcion,   
-    sig_patrimonio.nro_serie  
-FROM sig_patrimonio
-JOIN sig_detalle_activos ON
-    sig_detalle_activos.sec_ejec = sig_patrimonio.sec_ejec AND  
-    sig_detalle_activos.tipo_modalidad = sig_patrimonio.tipo_modalidad AND  
-    sig_detalle_activos.secuencia = sig_patrimonio.secuencia 
-LEFT JOIN ejecutora ON
-    sig_patrimonio.sec_ejec = ejecutora.sec_ejec
-WHERE
-    sig_detalle_activos.ano_eje = 2024 AND  
-    sig_detalle_activos.sec_ejec = 1137 AND  
-    sig_detalle_activos.tipo_modalidad = 1 AND  
-    sig_detalle_activos.tipo_movimto IN ('A','I') AND  
-    sig_patrimonio.tipo_bien = 'B' AND
-    ( ('%' = '%' OR '%' <> '%' AND sig_patrimonio.grupo_bien = '%') AND  
-    ('%' = '%' OR '%' <> '%' AND sig_patrimonio.clase_bien = '%') AND  
-    ('%' = '%' OR '%' <> '%' AND sig_patrimonio.familia_bien = '%') ) AND
-    ( ('0' = '0' OR 
-    ('0' = '1' AND sig_patrimonio.codigo_activo >= '' AND sig_patrimonio.codigo_activo <= '') OR  
-    ('0' = '2' AND sig_patrimonio.secuencia >= '' AND sig_patrimonio.secuencia <= '')) ) AND
-    ( 0 = 0 OR (0 <> 0 AND sig_patrimonio.sede = 0 AND sig_patrimonio.pliego = '') ) AND
-    ( '01.02.03' = '%' OR '01.02.03' <> '%' AND sig_patrimonio.centro_costo = '01.02.03' ) AND
-    ( 0 = 0 OR (0 <> 0 AND sig_patrimonio.tipo_ubicac = 0 AND sig_patrimonio.cod_ubicac = '') ) AND
-    ( '%' = '%' OR '%' <> '%' AND sig_patrimonio.empleado_final = '%' ) AND
-    NOT EXISTS (
-        SELECT p.secuencia 
-        FROM sig_patrimonio p
-        JOIN sig_detalle_activos d ON
-            p.sec_ejec = d.sec_ejec AND 
-            p.tipo_modalidad = d.tipo_modalidad AND 
-            p.secuencia = d.secuencia 
-        JOIN sig_movimiento_activo m ON
-            d.ano_eje = m.ano_eje AND 
-            d.sec_ejec = m.sec_ejec AND 
-            d.mes_proceso = m.mes_proceso AND 
-            d.tipo_movimto = m.tipo_movimto AND 
-            d.nro_movimto = m.nro_movimto 
-        WHERE 
-            p.sec_ejec = sig_patrimonio.sec_ejec AND 
-            p.tipo_modalidad = sig_patrimonio.tipo_modalidad AND 
-            p.secuencia = sig_patrimonio.secuencia AND 
-            m.tipo_movimto = 'S' AND m.tipo_transac = 5 
-    ) AND
-    NOT EXISTS (
-        SELECT p.secuencia 
-        FROM sig_patrimonio p
-        JOIN sig_detalle_activos d ON
-            p.sec_ejec = d.sec_ejec AND 
-            p.tipo_modalidad = d.tipo_modalidad AND 
-            p.secuencia = d.secuencia 
-        JOIN sig_movimiento_activo m ON
-            d.ano_eje = m.ano_eje AND 
-            d.sec_ejec = m.sec_ejec AND 
-            d.mes_proceso = m.mes_proceso AND 
-            d.tipo_movimto = m.tipo_movimto AND 
-            d.nro_movimto = m.nro_movimto 
-        WHERE 
-            p.sec_ejec = sig_patrimonio.sec_ejec AND 
-            p.tipo_modalidad = sig_patrimonio.tipo_modalidad AND 
-            p.secuencia = sig_patrimonio.secuencia AND 
-            m.tipo_movimto = 'I' AND m.tipo_transac = 12 
-    ) AND
-    NOT EXISTS (
-        SELECT a.secuencia 
-        FROM sig_asignaciones a
-        WHERE 
-            sig_patrimonio.sec_ejec = a.sec_ejec AND
-            sig_patrimonio.tipo_modalidad = a.tipo_modalidad AND
-            sig_patrimonio.secuencia = a.secuencia AND
-            a.ano_eje = 2024
-    )
-UNION
-SELECT DISTINCT 
-    sig_patrimonio.secuencia,   
-    sig_patrimonio.codigo_activo,   
-    sig_patrimonio.codigo_barra,   
-    sig_patrimonio.descripcion,   
-    sig_patrimonio.nro_serie  
-FROM sig_patrimonio
-JOIN sig_detalle_activos ON
-    sig_detalle_activos.sec_ejec = sig_patrimonio.sec_ejec AND  
-    sig_detalle_activos.tipo_modalidad = sig_patrimonio.tipo_modalidad AND  
-    sig_detalle_activos.secuencia = sig_patrimonio.secuencia 
-JOIN sig_asignaciones ON
-    sig_asignaciones.ano_eje = sig_detalle_activos.ano_eje AND
-    sig_asignaciones.sec_ejec = sig_detalle_activos.sec_ejec AND
-    sig_asignaciones.tipo_modalidad = sig_detalle_activos.tipo_modalidad AND
-    sig_asignaciones.secuencia = sig_detalle_activos.secuencia
-WHERE 
-    sig_patrimonio.sec_ejec = 1137 AND  
-    sig_patrimonio.tipo_modalidad = 1 AND  
-    sig_detalle_activos.tipo_movimto IN ('A','I') AND  
-    sig_patrimonio.tipo_bien = 'B' AND  
-    ('%' = '%' OR '%' <> '%' AND sig_patrimonio.grupo_bien = '%') AND  
-    ('%' = '%' OR '%' <> '%' AND sig_patrimonio.clase_bien = '%') AND  
-    ('%' = '%' OR '%' <> '%' AND sig_patrimonio.familia_bien = '%') AND  
-    sig_detalle_activos.ano_eje = 2024 AND  
-    sig_detalle_activos.sec_ejec = 1137 AND  
-    sig_detalle_activos.tipo_modalidad = 1 AND  
-    ('0' = '0' OR 
-    ('0' = '1' AND sig_patrimonio.codigo_activo >= '' AND sig_patrimonio.codigo_activo <= '') OR  
-    ('0' = '2' AND sig_patrimonio.secuencia >= '' AND sig_patrimonio.secuencia <= '')) AND  
-    (0 = 0 OR (0 <> 0 AND sig_asignaciones.sede_entrega = 0 AND sig_asignaciones.pliego_entrega = '')) AND
-    ('01.02.03' = '%' OR '01.02.03' <> '%' AND sig_asignaciones.centro_entrega = '01.02.03') AND
-    (0 = 0 OR (0 <> 0 AND sig_asignaciones.tipo_ubicac_entr = 0 AND sig_asignaciones.cod_ubicac_entr = '')) AND
-    ('%' = '%' OR '%' <> '%' AND sig_asignaciones.empleado_final_entr = '%') AND
-    sig_asignaciones.nro_asignac = (
-        SELECT MAX(a.nro_asignac) 
-        FROM sig_asignaciones a
-        WHERE 
-            sig_asignaciones.ano_eje = a.ano_eje AND 
-            sig_asignaciones.sec_ejec = a.sec_ejec AND
-            sig_asignaciones.tipo_modalidad = a.tipo_modalidad AND
-            sig_asignaciones.secuencia = a.secuencia
-    ) AND
-    NOT EXISTS (
-        SELECT p.secuencia 
-        FROM sig_patrimonio p
-        JOIN sig_detalle_activos d ON
-            p.sec_ejec = d.sec_ejec AND 
-            p.tipo_modalidad = d.tipo_modalidad AND 
-            p.secuencia = d.secuencia 
-        JOIN sig_movimiento_activo m ON
-            d.ano_eje = m.ano_eje AND 
-            d.sec_ejec = m.sec_ejec AND 
-            d.mes_proceso = m.mes_proceso AND 
-            d.tipo_movimto = m.tipo_movimto AND 
-            d.nro_movimto = m.nro_movimto 
-        WHERE 
-            p.sec_ejec = sig_patrimonio.sec_ejec AND 
-            p.tipo_modalidad = sig_patrimonio.tipo_modalidad AND 
-            p.secuencia = sig_patrimonio.secuencia AND 
-            m.tipo_movimto = 'S' AND m.tipo_transac = 5 
-    ) AND
-    NOT EXISTS (
-        SELECT p.secuencia 
-        FROM sig_patrimonio p
-        JOIN sig_detalle_activos d ON
-            p.sec_ejec = d.sec_ejec AND 
-            p.tipo_modalidad = d.tipo_modalidad AND 
-            p.secuencia = d.secuencia 
-        JOIN sig_movimiento_activo m ON
-            d.ano_eje = m.ano_eje AND 
-            d.sec_ejec = m.sec_ejec AND 
-            d.mes_proceso = m.mes_proceso AND 
-            d.tipo_movimto = m.tipo_movimto AND 
-            d.nro_movimto = m.nro_movimto 
-        WHERE 
-            p.sec_ejec = sig_patrimonio.sec_ejec AND 
-            p.tipo_modalidad = sig_patrimonio.tipo_modalidad AND 
-            p.secuencia = sig_patrimonio.secuencia AND 
-            m.tipo_movimto = 'I' AND m.tipo_transac = 12 
-    )
+//     SELECT DISTINCT 
+//     sig_patrimonio.secuencia,   
+//     sig_patrimonio.codigo_activo,   
+//     sig_patrimonio.codigo_barra,   
+//     sig_patrimonio.descripcion,   
+//     sig_patrimonio.nro_serie  
+// FROM sig_patrimonio
+// JOIN sig_detalle_activos ON
+//     sig_detalle_activos.sec_ejec = sig_patrimonio.sec_ejec AND  
+//     sig_detalle_activos.tipo_modalidad = sig_patrimonio.tipo_modalidad AND  
+//     sig_detalle_activos.secuencia = sig_patrimonio.secuencia 
+// LEFT JOIN ejecutora ON
+//     sig_patrimonio.sec_ejec = ejecutora.sec_ejec
+// WHERE
+//     sig_detalle_activos.ano_eje = 2024 AND  
+//     sig_detalle_activos.sec_ejec = 1137 AND  
+//     sig_detalle_activos.tipo_modalidad = 1 AND  
+//     sig_detalle_activos.tipo_movimto IN ('A','I') AND  
+//     sig_patrimonio.tipo_bien = 'B' AND
+//     ( ('%' = '%' OR '%' <> '%' AND sig_patrimonio.grupo_bien = '%') AND  
+//     ('%' = '%' OR '%' <> '%' AND sig_patrimonio.clase_bien = '%') AND  
+//     ('%' = '%' OR '%' <> '%' AND sig_patrimonio.familia_bien = '%') ) AND
+//     ( ('0' = '0' OR 
+//     ('0' = '1' AND sig_patrimonio.codigo_activo >= '' AND sig_patrimonio.codigo_activo <= '') OR  
+//     ('0' = '2' AND sig_patrimonio.secuencia >= '' AND sig_patrimonio.secuencia <= '')) ) AND
+//     ( 0 = 0 OR (0 <> 0 AND sig_patrimonio.sede = 0 AND sig_patrimonio.pliego = '') ) AND
+//     ( '01.02.03' = '%' OR '01.02.03' <> '%' AND sig_patrimonio.centro_costo = '01.02.03' ) AND
+//     ( 0 = 0 OR (0 <> 0 AND sig_patrimonio.tipo_ubicac = 0 AND sig_patrimonio.cod_ubicac = '') ) AND
+//     ( '%' = '%' OR '%' <> '%' AND sig_patrimonio.empleado_final = '%' ) AND
+//     NOT EXISTS (
+//         SELECT p.secuencia 
+//         FROM sig_patrimonio p
+//         JOIN sig_detalle_activos d ON
+//             p.sec_ejec = d.sec_ejec AND 
+//             p.tipo_modalidad = d.tipo_modalidad AND 
+//             p.secuencia = d.secuencia 
+//         JOIN sig_movimiento_activo m ON
+//             d.ano_eje = m.ano_eje AND 
+//             d.sec_ejec = m.sec_ejec AND 
+//             d.mes_proceso = m.mes_proceso AND 
+//             d.tipo_movimto = m.tipo_movimto AND 
+//             d.nro_movimto = m.nro_movimto 
+//         WHERE 
+//             p.sec_ejec = sig_patrimonio.sec_ejec AND 
+//             p.tipo_modalidad = sig_patrimonio.tipo_modalidad AND 
+//             p.secuencia = sig_patrimonio.secuencia AND 
+//             m.tipo_movimto = 'S' AND m.tipo_transac = 5 
+//     ) AND
+//     NOT EXISTS (
+//         SELECT p.secuencia 
+//         FROM sig_patrimonio p
+//         JOIN sig_detalle_activos d ON
+//             p.sec_ejec = d.sec_ejec AND 
+//             p.tipo_modalidad = d.tipo_modalidad AND 
+//             p.secuencia = d.secuencia 
+//         JOIN sig_movimiento_activo m ON
+//             d.ano_eje = m.ano_eje AND 
+//             d.sec_ejec = m.sec_ejec AND 
+//             d.mes_proceso = m.mes_proceso AND 
+//             d.tipo_movimto = m.tipo_movimto AND 
+//             d.nro_movimto = m.nro_movimto 
+//         WHERE 
+//             p.sec_ejec = sig_patrimonio.sec_ejec AND 
+//             p.tipo_modalidad = sig_patrimonio.tipo_modalidad AND 
+//             p.secuencia = sig_patrimonio.secuencia AND 
+//             m.tipo_movimto = 'I' AND m.tipo_transac = 12 
+//     ) AND
+//     NOT EXISTS (
+//         SELECT a.secuencia 
+//         FROM sig_asignaciones a
+//         WHERE 
+//             sig_patrimonio.sec_ejec = a.sec_ejec AND
+//             sig_patrimonio.tipo_modalidad = a.tipo_modalidad AND
+//             sig_patrimonio.secuencia = a.secuencia AND
+//             a.ano_eje = 2024
+//     )
+// UNION
+// SELECT DISTINCT 
+//     sig_patrimonio.secuencia,   
+//     sig_patrimonio.codigo_activo,   
+//     sig_patrimonio.codigo_barra,   
+//     sig_patrimonio.descripcion,   
+//     sig_patrimonio.nro_serie  
+// FROM sig_patrimonio
+// JOIN sig_detalle_activos ON
+//     sig_detalle_activos.sec_ejec = sig_patrimonio.sec_ejec AND  
+//     sig_detalle_activos.tipo_modalidad = sig_patrimonio.tipo_modalidad AND  
+//     sig_detalle_activos.secuencia = sig_patrimonio.secuencia 
+// JOIN sig_asignaciones ON
+//     sig_asignaciones.ano_eje = sig_detalle_activos.ano_eje AND
+//     sig_asignaciones.sec_ejec = sig_detalle_activos.sec_ejec AND
+//     sig_asignaciones.tipo_modalidad = sig_detalle_activos.tipo_modalidad AND
+//     sig_asignaciones.secuencia = sig_detalle_activos.secuencia
+// WHERE 
+//     sig_patrimonio.sec_ejec = 1137 AND  
+//     sig_patrimonio.tipo_modalidad = 1 AND  
+//     sig_detalle_activos.tipo_movimto IN ('A','I') AND  
+//     sig_patrimonio.tipo_bien = 'B' AND  
+//     ('%' = '%' OR '%' <> '%' AND sig_patrimonio.grupo_bien = '%') AND  
+//     ('%' = '%' OR '%' <> '%' AND sig_patrimonio.clase_bien = '%') AND  
+//     ('%' = '%' OR '%' <> '%' AND sig_patrimonio.familia_bien = '%') AND  
+//     sig_detalle_activos.ano_eje = 2024 AND  
+//     sig_detalle_activos.sec_ejec = 1137 AND  
+//     sig_detalle_activos.tipo_modalidad = 1 AND  
+//     ('0' = '0' OR 
+//     ('0' = '1' AND sig_patrimonio.codigo_activo >= '' AND sig_patrimonio.codigo_activo <= '') OR  
+//     ('0' = '2' AND sig_patrimonio.secuencia >= '' AND sig_patrimonio.secuencia <= '')) AND  
+//     (0 = 0 OR (0 <> 0 AND sig_asignaciones.sede_entrega = 0 AND sig_asignaciones.pliego_entrega = '')) AND
+//     ('01.02.03' = '%' OR '01.02.03' <> '%' AND sig_asignaciones.centro_entrega = '01.02.03') AND
+//     (0 = 0 OR (0 <> 0 AND sig_asignaciones.tipo_ubicac_entr = 0 AND sig_asignaciones.cod_ubicac_entr = '')) AND
+//     ('%' = '%' OR '%' <> '%' AND sig_asignaciones.empleado_final_entr = '%') AND
+//     sig_asignaciones.nro_asignac = (
+//         SELECT MAX(a.nro_asignac) 
+//         FROM sig_asignaciones a
+//         WHERE 
+//             sig_asignaciones.ano_eje = a.ano_eje AND 
+//             sig_asignaciones.sec_ejec = a.sec_ejec AND
+//             sig_asignaciones.tipo_modalidad = a.tipo_modalidad AND
+//             sig_asignaciones.secuencia = a.secuencia
+//     ) AND
+//     NOT EXISTS (
+//         SELECT p.secuencia 
+//         FROM sig_patrimonio p
+//         JOIN sig_detalle_activos d ON
+//             p.sec_ejec = d.sec_ejec AND 
+//             p.tipo_modalidad = d.tipo_modalidad AND 
+//             p.secuencia = d.secuencia 
+//         JOIN sig_movimiento_activo m ON
+//             d.ano_eje = m.ano_eje AND 
+//             d.sec_ejec = m.sec_ejec AND 
+//             d.mes_proceso = m.mes_proceso AND 
+//             d.tipo_movimto = m.tipo_movimto AND 
+//             d.nro_movimto = m.nro_movimto 
+//         WHERE 
+//             p.sec_ejec = sig_patrimonio.sec_ejec AND 
+//             p.tipo_modalidad = sig_patrimonio.tipo_modalidad AND 
+//             p.secuencia = sig_patrimonio.secuencia AND 
+//             m.tipo_movimto = 'S' AND m.tipo_transac = 5 
+//     ) AND
+//     NOT EXISTS (
+//         SELECT p.secuencia 
+//         FROM sig_patrimonio p
+//         JOIN sig_detalle_activos d ON
+//             p.sec_ejec = d.sec_ejec AND 
+//             p.tipo_modalidad = d.tipo_modalidad AND 
+//             p.secuencia = d.secuencia 
+//         JOIN sig_movimiento_activo m ON
+//             d.ano_eje = m.ano_eje AND 
+//             d.sec_ejec = m.sec_ejec AND 
+//             d.mes_proceso = m.mes_proceso AND 
+//             d.tipo_movimto = m.tipo_movimto AND 
+//             d.nro_movimto = m.nro_movimto 
+//         WHERE 
+//             p.sec_ejec = sig_patrimonio.sec_ejec AND 
+//             p.tipo_modalidad = sig_patrimonio.tipo_modalidad AND 
+//             p.secuencia = sig_patrimonio.secuencia AND 
+//             m.tipo_movimto = 'I' AND m.tipo_transac = 12 
+//     )
 
-    `;
+//     `;
 
-    const registros = await sequelize.query(sqlQuery, {
-      type: QueryTypes.SELECT,
-    });
+//     const registros = await sequelize.query(sqlQuery, {
+//       type: QueryTypes.SELECT,
+//     });
 
-    res.status(200).json({
-      msg: "Correlativos generados correctamente.",
-      data: registros,
-    });
-  } catch (error) {
-    console.error("Error al generar los correlativos:", error);
-    res.status(500).json({ message: "Error ", error });
-  }
-};
+//     res.status(200).json({
+//       msg: "Correlativos generados correctamente.",
+//       data: registros,
+//     });
+//   } catch (error) {
+//     console.error("Error al generar los correlativos:", error);
+//     res.status(500).json({ message: "Error ", error });
+//   }
+// };
 
 module.exports = {
   getData,
   getEtiquetas,
-  prueba,
+//   prueba,
 };
