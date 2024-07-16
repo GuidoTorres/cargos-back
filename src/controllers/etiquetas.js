@@ -88,7 +88,7 @@ const getEtiquetas = async (req, res) => {
         sig_patrimonio.codigo_barra,   
         sig_patrimonio.descripcion,   
         sig_patrimonio.nro_serie,
-        sig_patrimonio.nro_o  
+        sig_patrimonio.nro_orden 
     FROM 
         sig_patrimonio
     JOIN 
