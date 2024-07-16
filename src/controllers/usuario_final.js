@@ -2,6 +2,10 @@ const { Op, QueryTypes } = require("sequelize");
 const sequelize = require("../../config/database");
 const {models} = require('./../../config/database')
 
+const capitalizeFirstLetter = (string) => {
+    return string.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+  };
+  
 const getData = async(req,res) =>{
 
     try {
@@ -57,15 +61,36 @@ const getData = async(req,res) =>{
         )
     GROUP BY 
         SIG_PERSONAL.EMPLEADO, 
+        SIG_PERSONAL.NOMBRES,
         SIG_PERSONAL.APELLIDO_PATERNO, 
-        SIG_PERSONAL.APELLIDO_MATERNO, 
-        SIG_PERSONAL.NOMBRES;
-    
+        SIG_PERSONAL.APELLIDO_MATERNO
+    ORDER BY
+        SIG_PERSONAL.APELLIDO_PATERNO ASC
       `;
       const users = await sequelize.query(sqlQuery, {
         type: QueryTypes.SELECT,
       });
-      return res.status(200).json({ data: users });
+
+      const uniqueUsers = [];
+      const seenUsers = new Set();
+  
+      for (const user of users) {
+        const uniqueKey = `${user.APELLIDO_PATERNO}-${user.APELLIDO_MATERNO}-${user.NOMBRES}`;
+        if (!seenUsers.has(uniqueKey)) {
+          uniqueUsers.push(user);
+          seenUsers.add(uniqueKey);
+        }
+      }
+
+      const formattedData = uniqueUsers.map(item => {
+        return {
+          empleado: item.EMPLEADO,
+          AP_MATE: capitalizeFirstLetter(item.APELLIDO_MATERNO),
+          AP_PATE: capitalizeFirstLetter(item.APELLIDO_PATERNO),
+          DE_NOMB: capitalizeFirstLetter(item.NOMBRES),
+        };
+      })
+      return res.status(200).json({ data: formattedData });
     } catch (error) {
         res.status(500).json();
         console.log(error);
