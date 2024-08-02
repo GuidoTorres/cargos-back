@@ -274,8 +274,6 @@ const getBienes = async (req, res) => {
       type: QueryTypes.SELECT,
     });
 
-    console.log(etiquetas.length);
-
     // Filtrar elementos repetidos por codigo_activo
     const filteredEtiquetas = [];
     const seenCodigos = new Set();
@@ -291,11 +289,10 @@ const getBienes = async (req, res) => {
       return {
         sec_eje: item?.sec_eje,
         secuencia: item?.secuencia,
-        codigo_activo: item?.codigo_activo,
+        sbn: item?.codigo_activo,
         descripcion: item?.descripcion,
         estado: item?.estado,
         nombre_depend: item?.nombre_depend,
-
         nombre_sede: item?.nombre_sede,
         modelo: item?.modelo,
         marca: item?.marca,
@@ -306,6 +303,7 @@ const getBienes = async (req, res) => {
         fecha_compra: item?.fecha_compra,
         valor_compra: item?.valor_compra,
         ubicac_fisica: item?.ubicac_fisica,
+        empleado_final: item?.empleado_final,
         usuario_final:
           item?.nombre_usu + " " + item?.paterno_usu + " " + item?.materno_usu,
         valor_inicial: item?.valor_inicial,

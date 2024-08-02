@@ -17,6 +17,8 @@ const planillaRouter = require("./src/routes/planillaUsuarios");
 const etiquetaRouter = require("./src/routes/etiquetas");
 const adeudoRouter = require("./src/routes/adeudo");
 const bienesRouter = require("./src/routes/bienesInventario");
+const personalRouter = require("./src/routes/personal");
+const marcasRouter = require("./src/routes/marcas");
 
 const app = express();
 const port = 3001;
@@ -40,6 +42,8 @@ app.use("/api/v1/etiqueta", etiquetaRouter);
 app.use("/api/v1/adeudos", adeudoRouter);
 
 app.use("/api/v1/bienes", bienesRouter);
+app.use("/api/v1/personal", personalRouter);
+app.use("/api/v1/marcas", marcasRouter);
 
 sequelize
   .authenticate()
