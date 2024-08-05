@@ -28,10 +28,10 @@ const postDocumento = async (req, res, next) => {
     await models.documento.create(dataConCorrelativo);
 
     // Enviar una respuesta con el nuevo registro creado
-    return res.status(201).json({ data: "Adeudo guardado con éxito!" });
+    return res.status(201).json({ msg: "Adeudo guardado con éxito!" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error al guardar el adeudo.", error });
+    res.status(500).json({ msg: "Error al guardar el adeudo.", error });
   }
 };
 
