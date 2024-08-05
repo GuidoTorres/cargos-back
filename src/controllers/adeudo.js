@@ -3,7 +3,7 @@ const { models } = require("./../../config/database3");
 
 const getData = async (req, res, next) => {
   try {
-    const get = await models.documento.findAll({});
+    const get = await models.documento.findAll({order: [['id', 'DESC']]});
     return res.status(200).json({ data: get });
   } catch (error) {
     res.status(500).json();
