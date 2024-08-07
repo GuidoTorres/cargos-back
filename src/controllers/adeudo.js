@@ -19,7 +19,7 @@ const postDocumento = async (req, res, next) => {
       order: [["id", "DESC"]], // Ordenar por id en orden descendente
     });
 
-    let correlativo = ultimoDocumento ? ultimoDocumento.correlativo + 1 : 1;
+    let correlativo = ultimoDocumento ? ultimoDocumento.correlativo + 1 : 64;
 
     // Añadir el correlativo al body de la solicitud
     const dataConCorrelativo = { ...req.body, correlativo };
