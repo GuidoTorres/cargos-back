@@ -1,6 +1,7 @@
 const { Op, QueryTypes } = require("sequelize");
 const sequelize = require("../../config/database");
-const {models} = require('./../../config/database')
+const {models} = require('./../../config/database3');
+const { encrypt } = require("../helpers/handleBcrypt");
 
 const capitalizeFirstLetter = (string) => {
     return string.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
@@ -99,4 +100,83 @@ const getData = async(req,res) =>{
 
 
 }
-module.exports ={ getData}
+
+const postUsuario = async (req, res, next) => {
+    const { nombre, contrasenia, estado, usuario } = req.body;
+    if (!nombre || !contrasenia) {
+      return res.status(400).json({ msg: "Faltan campos requeridos" });
+    }
+    const passwordHash = await encrypt(contrasenia);
+    let info = {
+      nombre: nombre,
+      usuario: usuario,
+      contrasenia: passwordHash,
+      estado: estado || true,
+    };
+    try {
+      const getUser = await models.usuarios.findAll({
+        where: { usuario: usuario },
+      });
+  
+      if (getUser.length > 0) {
+        return res.status(409).json({
+          msg: "El nombre de usuario ya existe, intente con otro!",
+          status: 500,
+        });
+      } else {
+        const nuevoUsuario = await models.usuarios.create(info);
+        return res.status(200).json({
+          data: nuevoUsuario,
+          msg: "Usuario creado con éxito!",
+          status: 200,
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ msg: "No se pudo crear.", status: 500 });
+      console.log(error);
+    }
+  };
+  
+  const updateUsuario = async (req, res, next) => {
+    let id = req.params.id;
+  
+    let info = {
+      nombre: req.body.nombre,
+      usuario: req.body.usuario,
+      estado: Boolean(req.body.estado),
+    };
+  
+    if (req.body.contrasenia) {
+      try {
+        const passwordHash = await encrypt(req.body.contrasenia);
+        info.contrasenia = passwordHash;
+      } catch (error) {
+        return res.status(500).json({ msg: "Error al encriptar la contraseña", status: 500 });
+      }
+    }
+  
+    try {
+      // Actualizar la información del usuario
+      await models.usuarios.update(info, { where: { id: id } });
+      return res
+        .status(200)
+        .json({ msg: "Usuario actualizado con éxito!", status: 200 });
+    } catch (error) {
+      res.status(500).json({ msg: "No se pudo actualizar", status: 500 });
+      console.log(error);
+    }
+  };
+  
+  const deleteUsuario = async (req, res, next) => {
+    let id = req.params.id;
+    try {
+      await models.usuarios.destroy({ where: { id: id } });
+      return res
+        .status(200)
+        .json({ msg: "Usuario eliminado con éxito!", status: 200 });
+    } catch (error) {
+      res.status(500).json({ msg: "No se pudo eliminar", status: 500 });
+    }
+  };
+
+module.exports ={ getData, postUsuario, updateUsuario, deleteUsuario}

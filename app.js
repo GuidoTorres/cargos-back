@@ -40,7 +40,6 @@ app.use("/api/v1/usuarioAuth", usuarioAuthRouter);
 app.use("/api/v1/planilla", planillaRouter);
 app.use("/api/v1/etiqueta", etiquetaRouter);
 app.use("/api/v1/adeudos", adeudoRouter);
-
 app.use("/api/v1/bienes", bienesRouter);
 app.use("/api/v1/personal", personalRouter);
 app.use("/api/v1/marcas", marcasRouter);

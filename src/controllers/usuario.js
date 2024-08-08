@@ -2,6 +2,7 @@ const { encrypt } = require("../helpers/handleBcrypt");
 
 const sequelize = require("../../config/database");
 const { models } = require("./../../config/database");
+const { models3 } = require("./../../config/database3");
 
 const getUsuario = async (req, res, next) => {
   try {
@@ -25,15 +26,14 @@ const postUsuario = async (req, res, next) => {
   }
   const passwordHash = await encrypt(contrasenia);
   let info = {
-    cuserlname: nombre,
-    cuser_id: usuario,
-    cpassword: passwordHash,
-    cestado: estado || true,
-    CUSER_ID_REG:"ADMIN"
+    nombre: nombre,
+    usuario: usuario,
+    contrasenia: passwordHash,
+    estado: estado || true,
   };
   try {
-    const getUser = await models.users.findAll({
-      where: { cuser_id: usuario },
+    const getUser = await models3.usuarios.findAll({
+      where: { usuario: usuario },
     });
 
     if (getUser.length > 0) {
@@ -42,7 +42,7 @@ const postUsuario = async (req, res, next) => {
         status: 500,
       });
     } else {
-      const nuevoUsuario = await models.users.create(info);
+      const nuevoUsuario = await models3.usuarios.create(info);
       return res.status(200).json({
         data: nuevoUsuario,
         msg: "Usuario creado con éxito!",
@@ -64,7 +64,7 @@ const updateUsuario = async (req, res, next) => {
     estado: Boolean(req.body.estado),
   };
   try {
-    await models.users.update(info, { where: { id: id } });
+    await models3.usuarios.update(info, { where: { id: id } });
     return res
       .status(200)
       .json({ msg: "Usuario actualizado con éxito!", status: 200 });
@@ -76,7 +76,7 @@ const updateUsuario = async (req, res, next) => {
 const deleteUsuario = async (req, res, next) => {
   let id = req.params.id;
   try {
-    await models.users.destroy({ where: { id: id } });
+    await models3.usuarios.destroy({ where: { id: id } });
     return res
       .status(200)
       .json({ msg: "Usuario eliminado con éxito!", status: 200 });

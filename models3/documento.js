@@ -58,6 +58,9 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.STRING(255),
         allowNull: true,
       },
+      usuario_id:{
+        type: DataTypes.INTEGER,
+      }
     },
     {
       tableName: "documento", // Nombre explícito de la tabla

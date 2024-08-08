@@ -1,23 +1,22 @@
 const sequelize = require("../../config/database");
-const { models } = require("./../../config/database");
+const { models } = require("./../../config/database3");
 const { tokenSign } = require("../helpers/generateToken");
 const { compare } = require("../helpers/handleBcrypt");
 
 const authLogin = async (req, res, next) => {
   try {
     const { usuario, contrasenia } = req.body;
-    const get = await models.users.findOne({
-      where: { cuser_id: usuario },
-      attributes: ["cuser_id", "cuserlname", "cpassword"],
+    const get = await models.usuarios.findOne({
+      where: { usuario: usuario },
+      attributes: ["id","usuario", "nombre", "contrasenia"],
     });
-    console.log(get);
     if (!get) {
       return res
         .status(404)
         .send({ msg: "Usuario no encontrado!", status: 404 });
     }
 
-    const checkPassword = await compare(contrasenia, get.dataValues.cpassword);
+    const checkPassword = await compare(contrasenia, get.dataValues.contrasenia);
     const tokenSession = await tokenSign(get.dataValues);
     if (get.estado === false) {
       return res.status(500).send({ msg: "Usuario inactivo!", status: 500 });
@@ -27,7 +26,7 @@ const authLogin = async (req, res, next) => {
       return res.send({
         data: get,
         tokenSession,
-        msg: `Bienvenido ${get.cuserlname}!`,
+        msg: `Bienvenido ${get.nombre}!`,
         status: 200,
       });
     }
