@@ -396,13 +396,17 @@ const actualizarCorrelativos = async (req, res, next) => {
           [Op.ne]: null,
         },
       },
-      order: [["SECUENCIA", "DESC"]],
+      order: [["SECUENCIA", "DESC"], ["ID_CORRELATIVO", "DESC"],],
     });
 
     let correlativo = ultimoCorrelativoRegistro
       ? parseInt(ultimoCorrelativoRegistro.ID_CORRELATIVO)
       : 0;
 
+
+    console.log('====================================');
+    console.log(correlativo);
+    console.log('====================================');
 
     // Obtener registros del año actual incluyendo datos de sig_patrimonio
     const sqlQuery = `
@@ -470,6 +474,9 @@ const actualizarCorrelativos = async (req, res, next) => {
           NRO_ASIGNAC: registro.NRO_ASIGNAC,
         };
 
+        console.log('====================================');
+        console.log(correlativo);
+        console.log('====================================');
         // Actualizar la base de datos con el correlativo asignado
         await models.SIG_ASIGNACIONES.update(
           { ID_CORRELATIVO: correlativo.toString() }, // Convertir a cadena
@@ -495,10 +502,12 @@ const resetearCorrelativos = async (req, res, next) => {
   try {
     // Actualizar el campo ID_CORRELATIVO a null para los registros con la secuencia específica
     await models.SIG_ASIGNACIONES.update(
-      { ID_CORRELATIVO: null },
+      { ID_CORRELATIVO: 119 },
       {
         where: {
-          SECUENCIA: 15157,
+          SECUENCIA: {
+            [Op.in]: [15198] // Lista de números de secuencia
+          },
         },
       }
     );
