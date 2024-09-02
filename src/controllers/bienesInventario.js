@@ -384,9 +384,7 @@ WHERE
       type: QueryTypes.SELECT,
     });
 
-    console.log('====================================');
-    console.log(bienes.length);
-    console.log('====================================');
+
     // Filtrar elementos repetidos por codigo_activo
     const filteredEtiquetas = [];
     const seenCodigos = new Set();

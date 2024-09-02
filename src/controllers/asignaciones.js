@@ -403,10 +403,10 @@ const updateObservacion = async (req, res, next) => {
 };
 
 const actualizarCorrelativos = async (req, res, next) => {
+  const transaction = await sequelize.transaction(); // Iniciar una transacción
   try {
     const currentYear = new Date().getFullYear();
 
-    // Obtener el último correlativo del año actual, si existe
     const ultimoCorrelativoRegistro = await models.SIG_ASIGNACIONES.findOne({
       attributes: ["ID_CORRELATIVO", "SECUENCIA"],
       where: {
@@ -414,19 +414,13 @@ const actualizarCorrelativos = async (req, res, next) => {
           [Op.ne]: null,
         },
       },
-      order: [["SECUENCIA", "DESC"], ["ID_CORRELATIVO", "DESC"],],
+      order: [["ID_CORRELATIVO", "DESC"]],
     });
 
     let correlativo = ultimoCorrelativoRegistro
       ? parseInt(ultimoCorrelativoRegistro.ID_CORRELATIVO)
       : 0;
 
-
-    console.log('====================================');
-    console.log(correlativo);
-    console.log('====================================');
-
-    // Obtener registros del año actual incluyendo datos de sig_patrimonio
     const sqlQuery = `
       SELECT 
         a.ANO_EJE,
@@ -462,14 +456,13 @@ const actualizarCorrelativos = async (req, res, next) => {
       replacements: { currentYear },
     });
 
-    // Verificar si hay registros
     if (registros.length === 0) {
+      await transaction.commit();
       return res.status(200).json({
         msg: "No se encontraron nuevos registros.",
       });
     }
 
-    // Agrupar registros por EMPLEADO_FINAL, PATRIMONIO_NRO_ORDEN y FECHA_ASIG
     const grupos = registros.reduce((acc, registro) => {
       const key = `${registro.EMPLEADO_FINAL}-${registro.PATRIMONIO_NRO_ORDEN}-${registro.FECHA_ASIG}`;
       if (!acc[key]) {
@@ -480,7 +473,7 @@ const actualizarCorrelativos = async (req, res, next) => {
     }, {});
 
     for (const key in grupos) {
-      correlativo += 1; // Incrementar correlativo para cada nuevo grupo
+      correlativo += 1;
 
       const registrosGrupo = grupos[key];
       for (const registro of registrosGrupo) {
@@ -492,21 +485,19 @@ const actualizarCorrelativos = async (req, res, next) => {
           NRO_ASIGNAC: registro.NRO_ASIGNAC,
         };
 
-        console.log('====================================');
-        console.log(correlativo);
-        console.log('====================================');
-        // Actualizar la base de datos con el correlativo asignado
         await models.SIG_ASIGNACIONES.update(
-          { ID_CORRELATIVO: correlativo.toString() }, // Convertir a cadena
-          { where: condiciones }
+          { ID_CORRELATIVO: correlativo.toString() },
+          { where: condiciones, transaction } // Asegurar que la operación esté dentro de la transacción
         );
       }
     }
 
+    await transaction.commit(); // Confirmar la transacción
     res.status(200).json({
       msg: "Correlativos actualizados correctamente.",
     });
   } catch (error) {
+    await transaction.rollback(); // Revertir la transacción en caso de error
     console.error("Error al actualizar los correlativos:", error);
     res
       .status(500)
@@ -516,15 +507,16 @@ const actualizarCorrelativos = async (req, res, next) => {
 
 
 
+
 const resetearCorrelativos = async (req, res, next) => {
   try {
     // Actualizar el campo ID_CORRELATIVO a null para los registros con la secuencia específica
     await models.SIG_ASIGNACIONES.update(
-      { ID_CORRELATIVO: 119 },
+      { ID_CORRELATIVO: null },
       {
         where: {
-          SECUENCIA: {
-            [Op.in]: [15198] // Lista de números de secuencia
+          ID_CORRELATIVO: {
+            [Op.in]: [102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138] // Lista de números de secuencia
           },
         },
       }
