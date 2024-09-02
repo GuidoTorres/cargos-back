@@ -127,25 +127,10 @@ const getData = async (req, res) => {
     console.log("====================================");
   }
 };
-
 const getDataBienes = async (req, res) => {
   try {
     let { cod_usuario, fecha_asig, orden } = req.query;
     const fecha = dayjs.utc(fecha_asig).format("DD-MM-YYYY");
-
-    const sbnPrefixes = [
-      "74222358", "95228627", "74089500", "74084100", "74088187", "74083200", "95228287",
-      "74089950", "95228117", "95221467", "74081850", "95225812", "74087700", "74080500",
-      "74088224", "95226644", "74083650", "95227834", "74089556", "95226742", "74222726",
-      "74088037", "74084550", "74087250", "95228363", "74229950", "95221561", "95225815",
-      "74080050", "95223791", "74083875", "74085000", "74227274", "95227536", "95221470",
-      "74080950", "74089200", "95225907", "95221816", "95222166", "95226115", "74080275",
-      "95227044"
-    ];
-
-    // Convertir la lista de prefijos en una cadena de condiciones para SQL
-    const sbnCondition = sbnPrefixes.map(prefix => `LEFT(sig_patrimonio.sbn, 8) = '${prefix}'`).join(' OR ');
-
     const sqlQuery = `
     SELECT 
         sig_patrimonio.secuencia,
@@ -328,7 +313,6 @@ const getDataBienes = async (req, res) => {
       },
       type: QueryTypes.SELECT,
     });
-
     const seen = new Set();
     const format = bienes.filter((item) => {
       const duplicate = seen.has(item.secuencia);
