@@ -209,6 +209,7 @@ const getDataBienes = async (req, res) => {
         AND sig_patrimonio.pliego = '443'
         AND sig_detalle_activos.ano_eje = 2024
         AND sig_patrimonio.centro_costo IN ('01.06.01.02', '01.06.02.01')
+        AND (${sbnCondition}) -- Filtro por prefijos SBN
         AND NOT EXISTS (
             SELECT a.secuencia 
             FROM sig_asignaciones a 
@@ -315,6 +316,7 @@ const getDataBienes = async (req, res) => {
         AND sig_asignaciones.empleado_final_entr = :cod2 
         AND ((1 = 0) OR (sig_asignaciones.nro_interno = 1)) 
         AND sig_patrimonio.nro_orden = :orden2
+        AND (${sbnCondition}) -- Filtro por prefijos SBN
         AND (('S' = 'N') OR ('S' = 'S' AND sig_asignaciones.fecha_asig = :fecha))
     `;
 
