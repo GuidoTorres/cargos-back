@@ -391,7 +391,7 @@ const actualizarCorrelativos = async (req, res, next) => {
 
     const ultimoCorrelativoRegistro = await models.SIG_ASIGNACIONES.findOne({
       attributes: [
-        [sequelize.cast(sequelize.col('ID_CORRELATIVO'), 'UNSIGNED'), 'ID_CORRELATIVO'],
+        [sequelize.cast(sequelize.col('ID_CORRELATIVO'), 'INT'), 'ID_CORRELATIVO'],
         "SECUENCIA"
       ],
       where: {
@@ -399,9 +399,8 @@ const actualizarCorrelativos = async (req, res, next) => {
           [Op.ne]: null,
         },
       },
-      order: [[sequelize.cast(sequelize.col('ID_CORRELATIVO'), 'UNSIGNED'), "DESC"]],
+      order: [[sequelize.cast(sequelize.col('ID_CORRELATIVO'), 'INT'), "DESC"]],
     });
-
 
     let correlativo = ultimoCorrelativoRegistro
       ? parseInt(ultimoCorrelativoRegistro.ID_CORRELATIVO)
