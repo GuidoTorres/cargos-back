@@ -390,14 +390,18 @@ const actualizarCorrelativos = async (req, res, next) => {
     const currentYear = new Date().getFullYear();
 
     const ultimoCorrelativoRegistro = await models.SIG_ASIGNACIONES.findOne({
-      attributes: ["ID_CORRELATIVO", "SECUENCIA"],
+      attributes: [
+        [sequelize.cast(sequelize.col('ID_CORRELATIVO'), 'UNSIGNED'), 'ID_CORRELATIVO'],
+        "SECUENCIA"
+      ],
       where: {
         ID_CORRELATIVO: {
           [Op.ne]: null,
         },
       },
-      order: [["ID_CORRELATIVO", "DESC"]],
+      order: [[sequelize.cast(sequelize.col('ID_CORRELATIVO'), 'UNSIGNED'), "DESC"]],
     });
+
 
     let correlativo = ultimoCorrelativoRegistro
       ? parseInt(ultimoCorrelativoRegistro.ID_CORRELATIVO)
@@ -487,9 +491,6 @@ const actualizarCorrelativos = async (req, res, next) => {
   }
 };
 
-
-
-
 const resetearCorrelativos = async (req, res, next) => {
   try {
     // Actualizar el campo ID_CORRELATIVO a null para los registros con la secuencia específica
@@ -497,8 +498,8 @@ const resetearCorrelativos = async (req, res, next) => {
       { ID_CORRELATIVO: null },
       {
         where: {
-          ID_CORRELATIVO: {
-            [Op.in]: [102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138] // Lista de números de secuencia
+          secuencia: {
+            [Op.in]: [15252] // Lista de números de secuencia
           },
         },
       }

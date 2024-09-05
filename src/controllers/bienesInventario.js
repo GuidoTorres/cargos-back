@@ -420,7 +420,7 @@ WHERE
       };
     });
 
-    return res.status(200).json({  data: format });
+    return res.status(200).json({ cantidad:format.length,  data: format });
   } catch (error) {
     res.status(500).json();
     console.error("====================================");
