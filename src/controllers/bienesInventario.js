@@ -3,7 +3,7 @@ const sequelize = require("../../config/database");
 const { models } = require("./../../config/database");
 const dayjs = require("dayjs");
 
-const getBienes = async (req, res) => {
+const getConsultaBienesSiga = async (req, res) => {
   try {
       const { sede_id, ubicacion_id, dni, sbn, serie } = req.query;
   
@@ -177,6 +177,6 @@ const getBienesPrueba = async (req, res) => {
 };
 
 module.exports = {
-  getBienes,
+  getConsultaBienesSiga,
   getBienesPrueba,
 };
