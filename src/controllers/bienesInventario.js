@@ -5,318 +5,58 @@ const dayjs = require("dayjs");
 
 const getBienes = async (req, res) => {
   try {
-    const sqlQuery = `
-    SELECT sig_patrimonio.sec_ejec,
-           sig_patrimonio.tipo_modalidad,
-           sig_patrimonio.secuencia,
-           sig_patrimonio.codigo_activo,
-           sig_patrimonio.descripcion,
-           sig_patrimonio.estado,
-           sig_patrimonio.item_bien,
-           sig_centro_costo.nombre_depend,
-           sig_patrimonio.tipo_ubicac,
-           sig_patrimonio.empleado,
-           sig_personal_a.apellido_paterno,
-           sig_personal_a.apellido_materno,
-           sig_personal_a.nombres,
-           sig_patrimonio.sede,
-           sig_sedes.nombre_sede,
-           sig_patrimonio.pliego,
-           sig_patrimonio.tipo_ppto,
-           sig_patrimonio.tipo_bien,
-           sig_patrimonio.modelo,
-           sig_patrimonio.marca,
-           sig_patrimonio.medidas,
-           sig_patrimonio.caracteristicas,
-           sig_patrimonio.estado_conserv,
-           sig_patrimonio.estado_actual,
-           sig_patrimonio.tipo_patrim,
-           sig_patrimonio.subtipo,
-           sig_patrimonio.flag_sbn,
-           sig_patrimonio.tipo_activo,
-           sig_patrimonio.grupo_bien,
-           sig_patrimonio.clase_bien,
-           sig_patrimonio.familia_bien,
-           sig_patrimonio.fecha_movimto,
-           sig_patrimonio.proveedor,
-           sig_contratistas.nombre_prov,
-           sig_patrimonio.flag_etiqueta,
-           sig_patrimonio.fecha_etiquet,
-           sig_patrimonio.flag_salida,
-           sig_patrimonio.flag_contrato,
-           sig_patrimonio.fecha_garantia,
-           sig_patrimonio.nro_orden,
-           sig_patrimonio.fecha_compra,
-           sig_patrimonio.valor_compra,
-           sig_patrimonio.nro_pecosa,
-           sig_patrimonio.fecha_alta,
-           sig_patrimonio.ano_eje,
-           sig_patrimonio.clasificador,
-           sig_patrimonio.sub_cta,
-           sig_patrimonio.mayor,
-           sig_patrimonio.fecha_reg,
-           sig_patrimonio.cuser_id,
-           sig_patrimonio.fecha_act,
-           plan_ctb_sub_cta.nombre,
-           sig_almacen.nombre_alm,
-           sig_ubicac_fisica.ubicac_fisica,
-           sig_patrimonio.invent_scaner,
-           sig_patrimonio.valor_uit,
-           sig_patrimonio.equipo_act,
-           sig_patrimonio.tasa_deprec,
-           sig_patrimonio.empleado_final,
-           sig_personal_b.nombres AS nombre_usu,
-           sig_personal_b.apellido_materno AS materno_usu,
-           sig_personal_b.apellido_paterno AS paterno_usu,
-           sig_patrimonio.vida_util,
-           sig_patrimonio.tipo_documento,
-           sig_patrimonio.nro_documento,
-           sig_patrimonio.clase_patrim,
-           sig_patrimonio.fecha_nea,
-           sig_patrimonio.valor_nea,
-           sig_patrimonio.tipo_doc_refer,
-           sig_patrimonio.valor_inicial,
-           sig_patrimonio.valor_deprec,
-           sig_patrimonio.fec_fin_vida,
-           sig_patrimonio.observaciones,
-           marca.nombre,
-           sig_patrimonio.tipo_marca,
-           sig_patrimonio.hdepr_ajustada,
-           sig_patrimonio.nro_contrato,
-           sig_patrimonio.tipo_mov_ingr,
-           sig_patrimonio.tipo_tran_ingr,
-           sig_patrimonio.nro_mov_ingr,
-           '                                                  ' AS nombre_tipo_movi,
-           sig_patrimonio.estado_conserv_fin,
-           sig_patrimonio.pais,
-           sig_patrimonio.centro_costo,
-           sig_patrimonio.sec_almacen,
-           sig_patrimonio.cod_ubicac,
-           '1' AS amortizable,
-           sig_patrimonio.almacen,
-           sig_patrimonio.sec_modelo,
-           sig_patrimonio.flag_esni,
-           sig_patrimonio.nro_serie,
-           sig_patrimonio.codigo_barra,
-           sig_patrimonio.IND_COMPONETIZABLE,
-           sig_patrimonio.ind_tipo_deprec,
-           sig_patrimonio.hvalor_inicial,
-           sig_patrimonio.VALOR_INICIAL_ORIG,
-           sig_patrimonio.VALOR_DEPREC_ORIG,
-           sig_patrimonio.FLAG_DEPR_SALDO,
-           sig_patrimonio.SALDO_VALOR_INICIAL,
-           sig_patrimonio.FECHA_ALTA_ORIGEN
-    FROM sig_patrimonio
-    LEFT JOIN sig_contratistas ON sig_patrimonio.proveedor = sig_contratistas.proveedor
-    LEFT JOIN sig_personal sig_personal_a ON sig_patrimonio.sec_ejec = sig_personal_a.sec_ejec AND sig_patrimonio.empleado = sig_personal_a.empleado
-    LEFT JOIN sig_personal sig_personal_b ON sig_patrimonio.empleado_final = sig_personal_b.empleado AND sig_patrimonio.sec_ejec = sig_personal_b.sec_ejec
-    LEFT JOIN sig_almacen ON sig_patrimonio.sec_ejec = sig_almacen.sec_ejec AND sig_patrimonio.almacen = sig_almacen.almacen AND sig_patrimonio.sec_almacen = sig_almacen.sec_almacen
-    LEFT JOIN plan_ctb_sub_cta ON sig_patrimonio.ano_eje = plan_ctb_sub_cta.ano_eje AND sig_patrimonio.mayor = plan_ctb_sub_cta.mayor AND sig_patrimonio.sub_cta = plan_ctb_sub_cta.sub_cta
-    LEFT JOIN sig_ubicac_fisica ON sig_patrimonio.tipo_ubicac = sig_ubicac_fisica.tipo_ubicac AND sig_patrimonio.cod_ubicac = sig_ubicac_fisica.cod_ubicac
-    LEFT JOIN sig_sedes ON sig_patrimonio.pliego = sig_sedes.pliego AND sig_patrimonio.sede = sig_sedes.sede
-    LEFT JOIN sig_centro_costo ON sig_patrimonio.ano_eje = sig_centro_costo.ano_eje AND sig_patrimonio.sec_ejec = sig_centro_costo.sec_ejec AND sig_patrimonio.centro_costo = sig_centro_costo.centro_costo,
-    marca,
-    sig_detalle_activos
-    WHERE sig_patrimonio.marca = marca.marca
-      AND sig_patrimonio.tipo_marca = marca.tipo_marca
-      AND sig_patrimonio.sec_ejec = sig_detalle_activos.sec_ejec
-      AND sig_patrimonio.tipo_modalidad = sig_detalle_activos.tipo_modalidad
-      AND sig_patrimonio.secuencia = sig_detalle_activos.secuencia
-      AND sig_detalle_activos.ano_eje > 2010
-      AND sig_detalle_activos.sec_ejec = 1137
-      AND sig_detalle_activos.tipo_modalidad = 1
-      AND (
-        (sig_patrimonio.grupo_bien = 74 AND sig_patrimonio.clase_bien = 8) OR
-        (sig_patrimonio.grupo_bien = 95 AND sig_patrimonio.clase_bien = 22) OR
-        (sig_patrimonio.grupo_bien = 74 AND sig_patrimonio.clase_bien = 22)
-      )
-      AND NOT EXISTS (
-        SELECT a.ano_eje
-        FROM sig_asignaciones a
-        WHERE sig_detalle_activos.ano_eje = a.ano_eje
-          AND sig_detalle_activos.sec_ejec = a.sec_ejec
-          AND sig_detalle_activos.tipo_modalidad = a.tipo_modalidad
-          AND sig_detalle_activos.secuencia = a.secuencia
-      )
-    UNION
-    SELECT sig_patrimonio.sec_ejec,
-           sig_patrimonio.tipo_modalidad,
-           sig_patrimonio.secuencia,
-           sig_patrimonio.codigo_activo,
-           sig_patrimonio.descripcion,
-           sig_patrimonio.estado,
-           sig_patrimonio.item_bien,
-           sig_centro_costo.nombre_depend,
-           sig_asignaciones.tipo_ubicac,
-           sig_asignaciones.empleado,
-           sig_personal_a.apellido_paterno,
-           sig_personal_a.apellido_materno,
-           sig_personal_a.nombres,
-           sig_asignaciones.sede,
-           sig_sedes.nombre_sede,
-           sig_asignaciones.pliego,
-           sig_patrimonio.tipo_ppto,
-           sig_patrimonio.tipo_bien,
-           sig_patrimonio.modelo,
-           sig_patrimonio.marca,
-           sig_patrimonio.medidas,
-           sig_patrimonio.caracteristicas,
-           sig_patrimonio.estado_conserv,
-           sig_patrimonio.estado_actual,
-           sig_patrimonio.tipo_patrim,
-           sig_patrimonio.subtipo,
-           sig_patrimonio.flag_sbn,
-           sig_patrimonio.tipo_activo,
-           sig_patrimonio.grupo_bien,
-           sig_patrimonio.clase_bien,
-           sig_patrimonio.familia_bien,
-           sig_patrimonio.fecha_movimto,
-           sig_patrimonio.proveedor,
-           sig_contratistas.nombre_prov,
-           sig_patrimonio.flag_etiqueta,
-           sig_patrimonio.fecha_etiquet,
-           sig_patrimonio.flag_salida,
-           sig_patrimonio.flag_contrato,
-           sig_patrimonio.fecha_garantia,
-           sig_patrimonio.nro_orden,
-           sig_patrimonio.fecha_compra,
-           sig_patrimonio.valor_compra,
-           sig_patrimonio.nro_pecosa,
-           sig_patrimonio.fecha_alta,
-           sig_patrimonio.ano_eje,
-           sig_patrimonio.clasificador,
-           sig_patrimonio.sub_cta,
-           sig_patrimonio.mayor,
-           sig_patrimonio.fecha_reg,
-           sig_patrimonio.cuser_id,
-           sig_patrimonio.fecha_act,
-           plan_ctb_sub_cta.nombre,
-           sig_almacen.nombre_alm,
-           sig_ubicac_fisica.ubicac_fisica,
-           sig_patrimonio.invent_scaner,
-           sig_patrimonio.valor_uit,
-           sig_patrimonio.equipo_act,
-           sig_patrimonio.tasa_deprec,
-           sig_asignaciones.empleado_final,
-           sig_personal_b.nombres AS nombre_usu,
-           sig_personal_b.apellido_materno AS materno_usu,
-           sig_personal_b.apellido_paterno AS paterno_usu,
-           sig_patrimonio.vida_util,
-           sig_patrimonio.tipo_documento,
-           sig_patrimonio.nro_documento,
-           sig_patrimonio.clase_patrim,
-           sig_patrimonio.fecha_nea,
-           sig_patrimonio.valor_nea,
-           sig_patrimonio.tipo_doc_refer,
-           sig_patrimonio.valor_inicial,
-           sig_patrimonio.valor_deprec,
-           sig_patrimonio.fec_fin_vida,
-           sig_patrimonio.observaciones,
-           marca.nombre,
-           sig_patrimonio.tipo_marca,
-           sig_patrimonio.hdepr_ajustada,
-           sig_patrimonio.nro_contrato,
-           sig_patrimonio.tipo_mov_ingr,
-           sig_patrimonio.tipo_tran_ingr,
-           sig_patrimonio.nro_mov_ingr,
-           '                                                  ' AS nombre_tipo_movi,
-           sig_patrimonio.estado_conserv_fin,
-           sig_patrimonio.pais,
-           sig_asignaciones.centro_costo,
-           sig_patrimonio.sec_almacen,
-           sig_asignaciones.cod_ubicac,
-           '1' AS amortizable,
-           sig_patrimonio.almacen,
-           sig_patrimonio.sec_modelo,
-           sig_patrimonio.flag_esni,
-           sig_patrimonio.nro_serie,
-           sig_patrimonio.codigo_barra,
-           sig_patrimonio.IND_COMPONETIZABLE,
-           sig_patrimonio.ind_tipo_deprec,
-           sig_patrimonio.hvalor_inicial,
-           sig_patrimonio.VALOR_INICIAL_ORIG,
-           sig_patrimonio.VALOR_DEPREC_ORIG,
-           sig_patrimonio.FLAG_DEPR_SALDO,
-           sig_patrimonio.SALDO_VALOR_INICIAL,
-           sig_patrimonio.FECHA_ALTA_ORIGEN
-    FROM sig_patrimonio
-    LEFT JOIN sig_contratistas ON sig_patrimonio.proveedor = sig_contratistas.proveedor
-    LEFT JOIN sig_almacen ON sig_patrimonio.sec_ejec = sig_almacen.sec_ejec AND sig_patrimonio.almacen = sig_almacen.almacen AND sig_patrimonio.sec_almacen = sig_almacen.sec_almacen
-    LEFT JOIN plan_ctb_sub_cta ON sig_patrimonio.ano_eje = plan_ctb_sub_cta.ano_eje AND sig_patrimonio.mayor = plan_ctb_sub_cta.mayor AND sig_patrimonio.sub_cta = plan_ctb_sub_cta.sub_cta,
-    marca,
-    sig_detalle_activos,
-    sig_asignaciones
-    LEFT JOIN sig_centro_costo ON sig_asignaciones.ano_eje = sig_centro_costo.ano_eje AND sig_asignaciones.sec_ejec = sig_centro_costo.sec_ejec AND sig_asignaciones.centro_costo = sig_centro_costo.centro_costo
-    LEFT JOIN sig_personal sig_personal_a ON sig_asignaciones.sec_ejec = sig_personal_a.sec_ejec AND sig_asignaciones.empleado = sig_personal_a.empleado
-    LEFT JOIN sig_personal sig_personal_b ON sig_asignaciones.sec_ejec = sig_personal_b.sec_ejec AND sig_asignaciones.empleado_final = sig_personal_b.empleado
-    LEFT JOIN sig_ubicac_fisica ON sig_asignaciones.tipo_ubicac = sig_ubicac_fisica.tipo_ubicac AND sig_asignaciones.cod_ubicac = sig_ubicac_fisica.cod_ubicac
-    LEFT JOIN sig_sedes ON sig_asignaciones.pliego = sig_sedes.pliego AND sig_asignaciones.sede = sig_sedes.sede
-    WHERE sig_patrimonio.marca = marca.marca
-      AND sig_patrimonio.tipo_marca = marca.tipo_marca
-      AND sig_patrimonio.sec_ejec = sig_detalle_activos.sec_ejec
-      AND sig_patrimonio.tipo_modalidad = sig_detalle_activos.tipo_modalidad
-      AND sig_patrimonio.secuencia = sig_detalle_activos.secuencia
-      AND sig_asignaciones.ano_eje = sig_detalle_activos.ano_eje
-      AND sig_asignaciones.sec_ejec = sig_detalle_activos.sec_ejec
-      AND sig_asignaciones.tipo_modalidad = sig_detalle_activos.tipo_modalidad
-      AND sig_asignaciones.secuencia = sig_detalle_activos.secuencia
-      AND sig_detalle_activos.ano_eje > 2010
-      AND sig_detalle_activos.sec_ejec = 1137
-      AND sig_detalle_activos.tipo_modalidad = 1
-      AND (
-        (sig_patrimonio.grupo_bien = 74 AND sig_patrimonio.clase_bien = 8) OR
-        (sig_patrimonio.grupo_bien = 95 AND sig_patrimonio.clase_bien = 22) OR
-        (sig_patrimonio.grupo_bien = 74 AND sig_patrimonio.clase_bien = 22)
+      const { sede_id, ubicacion_id, dni, sbn, serie } = req.query;
+  
+      // Construir dinámicamente la cláusula WHERE
+      let whereClause = `
+        DA.ANO_EJE='2024' AND (DA.TIPO_MOVIMTO IN ('A', 'I'))
+      `;
+  
+      // Agregar filtros dinámicos si están presentes
+      const replacements = {};
 
-      )
-    `;
-
-    const etiquetas = await sequelize.query(sqlQuery, {
-      type: QueryTypes.SELECT,
-    });
-
-    // Filtrar elementos repetidos por codigo_activo
-    const filteredEtiquetas = [];
-    const seenCodigos = new Set();
-
-    for (const etiqueta of etiquetas) {
-      if (!seenCodigos.has(etiqueta.codigo_activo)) {
-        filteredEtiquetas.push(etiqueta);
-        seenCodigos.add(etiqueta.codigo_activo);
+      if (sede_id) {
+        whereClause += ` AND S.SEDE = :sede_id`;
+        replacements.sede_id = sede_id;
       }
-    }
+      if (ubicacion_id) {
+        whereClause += ` AND CONCAT(UF.TIPO_UBICAC, UF.COD_UBICAC) = :ubicacion_id`;
+        replacements.ubicacion_id = ubicacion_id;
+      }
+      if (dni) {
+        whereClause += ` AND P.docum_ident = :dni`;
+        replacements.dni = dni;
+      }
+      if (sbn) {
+        whereClause += ` AND SP.CODIGO_ACTIVO = :sbn`;
+        replacements.sbn = sbn;
+      }
+      if (serie) {
+        whereClause += ` AND SP.NRO_SERIE = :serie`;
+        replacements.serie = serie;
+      }
 
-    const format = filteredEtiquetas.map((item) => {
-      return {
-        sec_eje: item?.sec_eje,
-        secuencia: item?.secuencia,
-        sbn: item?.codigo_activo,
-        descripcion: item?.descripcion,
-        estado: item?.estado,
-        nombre_depend: item?.nombre_depend,
-        nombre_sede: item?.nombre_sede,
-        modelo: item?.modelo,
-        marca: item?.marca,
-        caracteristicas: item?.caracteristicas,
-        estado_conserv: item?.estado_conserv,
-        estado_actual: item?.estado_actual,
-        nro_orden: item?.nro_orden,
-        fecha_compra: item?.fecha_compra,
-        valor_compra: item?.valor_compra,
-        ubicac_fisica: item?.ubicac_fisica,
-        empleado_final: item?.empleado_final,
-        usuario_final:
-          item?.nombre_usu + " " + item?.paterno_usu + " " + item?.materno_usu,
-        valor_inicial: item?.valor_inicial,
-        nro_serie: item?.nro_serie,
-        codigo_barra: item?.codigo_barra,
-        proveedor: item?.proveedor,
-        grupo_bien: item.grupo_bien,
-        clase_bien: item.clase_bien,
-      };
-    });
+      const sqlQuery = `
+      SELECT SP.SECUENCIA, SP.CODIGO_ACTIVO, SP.DESCRIPCION, SP.ESTADO, SP.ESTADO_CONSERV, S.SEDE, S.nombre_sede, CC.CENTRO_COSTO, CC.NOMBRE_DEPEND, 
+        UF.TIPO_UBICAC, UF.COD_UBICAC, UF.UBICAC_FISICA, P.docum_ident, P.nombre_completo, SP.NRO_SERIE, M.NOMBRE AS MARCA, SP.MODELO, SP.MEDIDAS, 
+        SP.CARACTERISTICAS, SP.OBSERVACIONES  
+      FROM SIG_PATRIMONIO AS SP
+        INNER JOIN SIG_DETALLE_ACTIVOS AS DA ON (SP.ANO_EJE=DA.ANO_EJE AND SP.SEC_EJEC=DA.SEC_EJEC AND SP.SECUENCIA=DA.SECUENCIA AND SP.TIPO_MODALIDAD=DA.TIPO_MODALIDAD)
+        INNER JOIN SIG_CENTRO_COSTO AS CC ON (CC.ANO_EJE = SP.ANO_EJE AND CC.SEC_EJEC=SP.SEC_EJEC AND CC.CENTRO_COSTO = SP.CENTRO_COSTO)
+        INNER JOIN SIG_SEDES AS S ON (S.sede = SP.SEDE)
+        INNER JOIN SIG_UBICAC_FISICA AS UF ON (UF.TIPO_UBICAC = SP.TIPO_UBICAC AND UF.COD_UBICAC = SP.COD_UBICAC)
+        INNER JOIN SIG_PERSONAL P ON (P.sec_ejec = SP.SEC_EJEC AND P.empleado = SP.EMPLEADO)
+        INNER JOIN MARCA M ON (M.MARCA = SP.MARCA AND M.TIPO_MARCA = SP.TIPO_MARCA)
+      WHERE ${whereClause}
+      ORDER BY SP.CODIGO_ACTIVO
+      `;
 
-    return res.status(200).json({ total: format.length, data: format });
+      const etiquetas = await sequelize.query(sqlQuery, {
+        type: QueryTypes.SELECT,
+        replacements, // Aquí pasamos los valores reemplazados
+      });
+
+      return res.status(200).json({ cantidad: etiquetas.length, data: etiquetas });
   } catch (error) {
     res.status(500).json();
     console.error("====================================");
@@ -324,78 +64,86 @@ const getBienes = async (req, res) => {
     console.error("====================================");
   }
 };
+
 const getBienesPrueba = async (req, res) => {
   try {
     const sqlQuery = `
-    SELECT 
-    sig_patrimonio.sec_ejec,
-    sig_patrimonio.tipo_modalidad,
-    sig_patrimonio.secuencia,
-    sig_patrimonio.codigo_activo,
-    sig_patrimonio.descripcion,
-    sig_personal_a.apellido_paterno,
-    sig_personal_a.apellido_materno,
-    sig_personal_a.nombres,
-    sig_patrimonio.modelo,
-    sig_patrimonio.marca,
-    marca.nombre AS nombre_marca, -- Campo agregado
-    sig_patrimonio.medidas,
-    sig_patrimonio.caracteristicas,
-    sig_patrimonio.estado_conserv,
-    sig_patrimonio.grupo_bien,
-    sig_patrimonio.clase_bien,
-    sig_patrimonio.familia_bien,
-    sig_contratistas.nombre_prov,
-    sig_patrimonio.nro_orden,
-    sig_patrimonio.fecha_compra,
-    sig_patrimonio.valor_compra,
-    sig_personal_b.nombres AS nombre_usu,
-    sig_personal_b.apellido_materno AS materno_usu,
-    sig_personal_b.apellido_paterno AS paterno_usu,
-    sig_patrimonio.valor_inicial,
-    sig_patrimonio.nro_serie,
-    sig_patrimonio.empleado_final,
-    sig_patrimonio.codigo_barra,
-    sig_patrimonio.FECHA_ALTA_ORIGEN
-FROM sig_patrimonio
-LEFT JOIN sig_contratistas ON sig_patrimonio.proveedor = sig_contratistas.proveedor
-LEFT JOIN sig_almacen ON sig_patrimonio.sec_ejec = sig_almacen.sec_ejec AND sig_patrimonio.almacen = sig_almacen.almacen AND sig_patrimonio.sec_almacen = sig_almacen.sec_almacen
-LEFT JOIN plan_ctb_sub_cta ON sig_patrimonio.ano_eje = plan_ctb_sub_cta.ano_eje AND sig_patrimonio.mayor = plan_ctb_sub_cta.mayor AND sig_patrimonio.sub_cta = plan_ctb_sub_cta.sub_cta
-LEFT JOIN marca ON sig_patrimonio.marca = marca.marca AND sig_patrimonio.tipo_marca = marca.tipo_marca -- Unión para obtener el nombre de la marca
-LEFT JOIN sig_detalle_activos ON sig_patrimonio.sec_ejec = sig_detalle_activos.sec_ejec AND sig_patrimonio.tipo_modalidad = sig_detalle_activos.tipo_modalidad AND sig_patrimonio.secuencia = sig_detalle_activos.secuencia
-LEFT JOIN sig_asignaciones ON sig_asignaciones.ano_eje = sig_detalle_activos.ano_eje AND sig_asignaciones.sec_ejec = sig_detalle_activos.sec_ejec AND sig_asignaciones.tipo_modalidad = sig_detalle_activos.tipo_modalidad AND sig_asignaciones.secuencia = sig_detalle_activos.secuencia
-LEFT JOIN sig_centro_costo ON sig_asignaciones.ano_eje = sig_centro_costo.ano_eje AND sig_asignaciones.sec_ejec = sig_centro_costo.sec_ejec AND sig_asignaciones.centro_costo = sig_centro_costo.centro_costo
-LEFT JOIN sig_personal sig_personal_a ON sig_asignaciones.sec_ejec = sig_personal_a.sec_ejec AND sig_asignaciones.empleado = sig_personal_a.empleado
-LEFT JOIN sig_personal sig_personal_b ON sig_asignaciones.sec_ejec = sig_personal_b.sec_ejec AND sig_asignaciones.empleado_final = sig_personal_b.empleado
-LEFT JOIN sig_ubicac_fisica ON sig_asignaciones.tipo_ubicac = sig_ubicac_fisica.tipo_ubicac AND sig_asignaciones.cod_ubicac = sig_ubicac_fisica.cod_ubicac
-LEFT JOIN sig_sedes ON sig_asignaciones.pliego = sig_sedes.pliego AND sig_asignaciones.sede = sig_sedes.sede
-WHERE 
-    sig_detalle_activos.ano_eje > 2010
-    AND sig_detalle_activos.sec_ejec = 1137
-    AND sig_detalle_activos.tipo_modalidad = 1
-    AND (
-        (sig_patrimonio.grupo_bien = 74 AND sig_patrimonio.clase_bien = 8) OR
-        (sig_patrimonio.grupo_bien = 95 AND sig_patrimonio.clase_bien = 22) OR
-        (sig_patrimonio.grupo_bien = 74 AND sig_patrimonio.clase_bien = 22)
+    WITH bienes_filtrados AS (
+      SELECT 
+        sig_patrimonio.sec_ejec,
+        sig_patrimonio.tipo_modalidad,
+        sig_patrimonio.secuencia,
+        sig_patrimonio.codigo_activo,
+        sig_patrimonio.descripcion,
+        sig_personal_a.apellido_paterno,
+        sig_personal_a.apellido_materno,
+        sig_personal_a.nombres,
+        sig_patrimonio.modelo,
+        sig_patrimonio.marca,
+        marca.nombre AS nombre_marca,
+        sig_patrimonio.medidas,
+        sig_patrimonio.caracteristicas,
+        sig_patrimonio.estado_conserv,
+        sig_patrimonio.grupo_bien,
+        sig_patrimonio.clase_bien,
+        sig_contratistas.nombre_prov,
+        sig_patrimonio.nro_orden,
+        sig_patrimonio.fecha_compra,
+        sig_patrimonio.valor_compra,
+        sig_personal_b.nombres AS nombre_usu,
+        sig_personal_b.apellido_materno AS materno_usu,
+        sig_personal_b.apellido_paterno AS paterno_usu,
+        sig_patrimonio.valor_inicial,
+        sig_patrimonio.nro_serie,
+        sig_patrimonio.empleado_final,
+        sig_patrimonio.codigo_barra,
+        sig_patrimonio.FECHA_ALTA_ORIGEN,
+        ROW_NUMBER() OVER (PARTITION BY sig_patrimonio.codigo_activo ORDER BY sig_patrimonio.codigo_activo) AS row_num
+      FROM sig_patrimonio
+      LEFT JOIN sig_contratistas ON sig_patrimonio.proveedor = sig_contratistas.proveedor
+      LEFT JOIN sig_almacen ON sig_patrimonio.sec_ejec = sig_almacen.sec_ejec AND sig_patrimonio.almacen = sig_almacen.almacen AND sig_patrimonio.sec_almacen = sig_almacen.sec_almacen
+      LEFT JOIN plan_ctb_sub_cta ON sig_patrimonio.ano_eje = plan_ctb_sub_cta.ano_eje AND sig_patrimonio.mayor = plan_ctb_sub_cta.mayor AND sig_patrimonio.sub_cta = plan_ctb_sub_cta.sub_cta
+      LEFT JOIN marca ON sig_patrimonio.marca = marca.marca AND sig_patrimonio.tipo_marca = marca.tipo_marca
+      LEFT JOIN sig_detalle_activos ON sig_patrimonio.sec_ejec = sig_detalle_activos.sec_ejec AND sig_patrimonio.tipo_modalidad = sig_detalle_activos.tipo_modalidad AND sig_patrimonio.secuencia = sig_detalle_activos.secuencia
+      LEFT JOIN sig_asignaciones ON sig_asignaciones.ano_eje = sig_detalle_activos.ano_eje AND sig_asignaciones.sec_ejec = sig_detalle_activos.sec_ejec AND sig_asignaciones.tipo_modalidad = sig_detalle_activos.tipo_modalidad AND sig_asignaciones.secuencia = sig_detalle_activos.secuencia
+      LEFT JOIN sig_centro_costo ON sig_asignaciones.ano_eje = sig_centro_costo.ano_eje AND sig_asignaciones.sec_ejec = sig_centro_costo.sec_ejec AND sig_asignaciones.centro_costo = sig_centro_costo.centro_costo
+      LEFT JOIN sig_personal sig_personal_a ON sig_asignaciones.sec_ejec = sig_personal_a.sec_ejec AND sig_asignaciones.empleado = sig_personal_a.empleado
+      LEFT JOIN sig_personal sig_personal_b ON sig_asignaciones.sec_ejec = sig_personal_b.sec_ejec AND sig_asignaciones.empleado_final = sig_personal_b.empleado
+      LEFT JOIN sig_ubicac_fisica ON sig_asignaciones.tipo_ubicac = sig_ubicac_fisica.tipo_ubicac AND sig_asignaciones.cod_ubicac = sig_ubicac_fisica.cod_ubicac
+      LEFT JOIN sig_sedes ON sig_asignaciones.pliego = sig_sedes.pliego AND sig_asignaciones.sede = sig_sedes.sede
+      WHERE 
+        sig_detalle_activos.ano_eje > 2010
+        AND sig_detalle_activos.sec_ejec = 1137
+        AND sig_detalle_activos.tipo_modalidad = 1
+        AND (
+            (sig_patrimonio.grupo_bien = 74 AND sig_patrimonio.clase_bien = 8) OR
+            (sig_patrimonio.grupo_bien = 95 AND sig_patrimonio.clase_bien = 22) OR
+            (sig_patrimonio.grupo_bien = 74 AND sig_patrimonio.clase_bien = 22)
+        )
     )
+    SELECT *
+    FROM bienes_filtrados
+    WHERE row_num = 1;
+      
     `;
 
+    // Ejecutar la consulta
     const bienes = await sequelize.query(sqlQuery, {
       type: QueryTypes.SELECT,
     });
 
-
-    // Filtrar elementos repetidos por codigo_activo
+    // Filtrar duplicados usando un Map para mejorar el rendimiento
     const filteredEtiquetas = [];
-    const seenCodigos = new Set();
+    const seenCodigos = new Map();
 
     for (const etiqueta of bienes) {
       if (!seenCodigos.has(etiqueta.codigo_activo)) {
         filteredEtiquetas.push(etiqueta);
-        seenCodigos.add(etiqueta.codigo_activo);
+        seenCodigos.set(etiqueta.codigo_activo, true); // Usar Map para almacenar códigos vistos
       }
     }
 
+    // Formatear los datos
     const format = filteredEtiquetas.map((item) => {
       return {
         secuencia: item?.secuencia,
@@ -411,8 +159,7 @@ WHERE
         valor_compra: item?.valor_compra,
         ubicac_fisica: item?.ubicac_fisica,
         empleado_final: item?.empleado_final,
-        usuario_final:
-          item?.nombre_usu + " " + item?.paterno_usu + " " + item?.materno_usu,
+        usuario_final: `${item?.nombre_usu} ${item?.paterno_usu} ${item?.materno_usu}`,
         nro_serie: item?.nro_serie,
         proveedor: item?.nombre_prov,
         grupo_bien: item.grupo_bien,
@@ -420,7 +167,7 @@ WHERE
       };
     });
 
-    return res.status(200).json({ cantidad:format.length,  data: format });
+    return res.status(200).json({ cantidad: format.length, data: format });
   } catch (error) {
     res.status(500).json();
     console.error("====================================");
@@ -431,5 +178,5 @@ WHERE
 
 module.exports = {
   getBienes,
-  getBienesPrueba
+  getBienesPrueba,
 };

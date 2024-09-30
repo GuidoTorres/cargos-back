@@ -151,7 +151,22 @@ const getEtiquetas = async (req, res) => {
         )
         ORDER BY sig_patrimonio.secuencia DESC
   `;
-
+  console.log('====================================');
+  console.log({
+    familiaBien: req.query.familiaBien || null,
+    startSeq: req.query.startSeq || null,
+    endSeq: req.query.endSeq || null,
+    startCodigoActivo: req.query.startCodigoActivo || null,
+    endCodigoActivo: req.query.endCodigoActivo || null,
+    sede: req.query.sede || null,
+    pliego: req.query.pliego || null,
+    centroCosto: req.query.centroCosto || null,
+    tipoUbicac: req.query.tipoUbicac || null,
+    codUbicac: req.query.codUbicac || null,
+    empleadoFinal: req.query.empleadoFinal || null,
+    desc: req.query.desc ? `%${req.query.desc}%` : null
+  });
+  console.log('====================================');
     const etiquetas = await sequelize.query(sqlQuery, {
       replacements: {
         familiaBien: req.query.familiaBien || null,
