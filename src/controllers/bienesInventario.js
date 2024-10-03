@@ -5,38 +5,38 @@ const dayjs = require("dayjs");
 
 const getConsultaBienesSiga = async (req, res) => {
   try {
-      const { sede_id, ubicacion_id, dni, sbn, serie } = req.query;
-  
-      // Construir dinámicamente la cláusula WHERE
-      let whereClause = `
+    const { sede_id, ubicacion_id, dni, sbn, serie } = req.query;
+
+    // Construir dinámicamente la cláusula WHERE
+    let whereClause = `
         DA.ANO_EJE='2024' AND (DA.TIPO_MOVIMTO IN ('A', 'I'))
       `;
-  
-      // Agregar filtros dinámicos si están presentes
-      const replacements = {};
 
-      if (sede_id) {
-        whereClause += ` AND S.SEDE = :sede_id`;
-        replacements.sede_id = sede_id;
-      }
-      if (ubicacion_id) {
-        whereClause += ` AND CONCAT(UF.TIPO_UBICAC, UF.COD_UBICAC) = :ubicacion_id`;
-        replacements.ubicacion_id = ubicacion_id;
-      }
-      if (dni) {
-        whereClause += ` AND P.docum_ident = :dni`;
-        replacements.dni = dni;
-      }
-      if (sbn) {
-        whereClause += ` AND SP.CODIGO_ACTIVO = :sbn`;
-        replacements.sbn = sbn;
-      }
-      if (serie) {
-        whereClause += ` AND SP.NRO_SERIE = :serie`;
-        replacements.serie = serie;
-      }
+    // Agregar filtros dinámicos si están presentes
+    const replacements = {};
 
-      const sqlQuery = `
+    if (sede_id) {
+      whereClause += ` AND S.SEDE = :sede_id`;
+      replacements.sede_id = sede_id;
+    }
+    if (ubicacion_id) {
+      whereClause += ` AND CONCAT(UF.TIPO_UBICAC, UF.COD_UBICAC) = :ubicacion_id`;
+      replacements.ubicacion_id = ubicacion_id;
+    }
+    if (dni) {
+      whereClause += ` AND P.docum_ident = :dni`;
+      replacements.dni = dni;
+    }
+    if (sbn) {
+      whereClause += ` AND SP.CODIGO_ACTIVO = :sbn`;
+      replacements.sbn = sbn;
+    }
+    if (serie) {
+      whereClause += ` AND SP.NRO_SERIE = :serie`;
+      replacements.serie = serie;
+    }
+
+    const sqlQuery = `
       SELECT SP.SECUENCIA, SP.CODIGO_ACTIVO, SP.DESCRIPCION, SP.ESTADO, SP.ESTADO_CONSERV, S.SEDE, S.nombre_sede, CC.CENTRO_COSTO, CC.NOMBRE_DEPEND, 
         UF.TIPO_UBICAC, UF.COD_UBICAC, UF.UBICAC_FISICA, P.docum_ident, P.nombre_completo, SP.NRO_SERIE, M.NOMBRE AS MARCA, SP.MODELO, SP.MEDIDAS, 
         SP.CARACTERISTICAS, SP.OBSERVACIONES  
@@ -51,17 +51,17 @@ const getConsultaBienesSiga = async (req, res) => {
       ORDER BY SP.CODIGO_ACTIVO
       `;
 
-      const etiquetas = await sequelize.query(sqlQuery, {
-        type: QueryTypes.SELECT,
-        replacements, // Aquí pasamos los valores reemplazados
-      });
+    const etiquetas = await sequelize.query(sqlQuery, {
+      type: QueryTypes.SELECT,
+      replacements, // Aquí pasamos los valores reemplazados
+    });
 
-      return res.status(200).json({ cantidad: etiquetas.length, data: etiquetas });
+    return res
+      .status(200)
+      .json({ cantidad: etiquetas.length, data: etiquetas });
   } catch (error) {
-    res.status(500).json();
-    console.error("====================================");
-    console.error(error);
-    console.error("====================================");
+    res.status(500).json(error);
+    console.log(error);
   }
 };
 
