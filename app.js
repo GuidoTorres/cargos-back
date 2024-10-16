@@ -19,12 +19,12 @@ const adeudoRouter = require("./src/routes/adeudo");
 const bienesRouter = require("./src/routes/bienesInventario");
 const personalRouter = require("./src/routes/personal");
 const marcasRouter = require("./src/routes/marcas");
+const coloresRouter = require("./src/routes/colores");
 
 const app = express();
 const port = 3001;
 const port2 = 3002;
 const port3 = 3003;
-
 
 app.use(cors());
 app.use(express.json());
@@ -43,6 +43,7 @@ app.use("/api/v1/adeudos", adeudoRouter);
 app.use("/api/v1/bienes", bienesRouter);
 app.use("/api/v1/personal", personalRouter);
 app.use("/api/v1/marcas", marcasRouter);
+app.use("/api/v1/colores", coloresRouter);
 
 sequelize
   .authenticate()
@@ -68,7 +69,7 @@ sequelize2
     console.error("Unable to connect to the database:", error);
   });
 
-  sequelize3
+sequelize3
   .authenticate()
   .then(() => {
     console.log("Connection has been established successfully.");
@@ -79,4 +80,3 @@ sequelize2
   .catch((error) => {
     console.error("Unable to connect to the database:", error);
   });
-
