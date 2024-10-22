@@ -65,11 +65,56 @@ const getConsultaBienesSiga = async (req, res) => {
   }
 };
 
+const getConsultaBienesSigaSbn = async (req, res) => {
+  try {
+    const { sede_id, ubicacion_id, dni, sbn, serie } = req.query;
+
+    // Construir dinámicamente la cláusula WHERE
+    let whereClause = `
+        DA.ANO_EJE='2024' AND (DA.TIPO_MOVIMTO IN ('A', 'I'))
+      `;
+
+    // Agregar filtros dinámicos si están presentes
+    const replacements = {};
+
+    if (sbn) {
+      whereClause += ` AND SP.CODIGO_ACTIVO = :sbn`;
+      replacements.sbn = sbn;
+    }
+
+    const sqlQuery = `
+      SELECT SP.SECUENCIA, SP.CODIGO_ACTIVO, SP.DESCRIPCION, SP.ESTADO, SP.ESTADO_CONSERV, S.SEDE, S.nombre_sede, CC.CENTRO_COSTO, CC.NOMBRE_DEPEND, 
+        UF.TIPO_UBICAC, UF.COD_UBICAC, UF.UBICAC_FISICA, P.docum_ident, P.nombre_completo, SP.NRO_SERIE, M.NOMBRE AS MARCA, SP.MODELO, SP.MEDIDAS, 
+        SP.CARACTERISTICAS, SP.OBSERVACIONES  
+      FROM SIG_PATRIMONIO AS SP
+        INNER JOIN SIG_DETALLE_ACTIVOS AS DA ON (SP.ANO_EJE=DA.ANO_EJE AND SP.SEC_EJEC=DA.SEC_EJEC AND SP.SECUENCIA=DA.SECUENCIA AND SP.TIPO_MODALIDAD=DA.TIPO_MODALIDAD)
+        INNER JOIN SIG_CENTRO_COSTO AS CC ON (CC.ANO_EJE = SP.ANO_EJE AND CC.SEC_EJEC=SP.SEC_EJEC AND CC.CENTRO_COSTO = SP.CENTRO_COSTO)
+        INNER JOIN SIG_SEDES AS S ON (S.sede = SP.SEDE)
+        INNER JOIN SIG_UBICAC_FISICA AS UF ON (UF.TIPO_UBICAC = SP.TIPO_UBICAC AND UF.COD_UBICAC = SP.COD_UBICAC)
+        INNER JOIN SIG_PERSONAL P ON (P.sec_ejec = SP.SEC_EJEC AND P.empleado = SP.EMPLEADO)
+        INNER JOIN MARCA M ON (M.MARCA = SP.MARCA AND M.TIPO_MARCA = SP.TIPO_MARCA)
+      WHERE ${whereClause}
+      ORDER BY SP.CODIGO_ACTIVO
+      `;
+
+    const etiquetas = await sequelize.query(sqlQuery, {
+      type: QueryTypes.SELECT,
+      replacements, // Aquí pasamos los valores reemplazados
+    });
+
+    return res.status(200).json({ data: etiquetas });
+  } catch (error) {
+    res.status(500).json(error);
+    console.log(error);
+  }
+};
+
 const getBienesPrueba = async (req, res) => {
   try {
     const sqlQuery = `
-SELECT SP.SECUENCIA, SP.CODIGO_ACTIVO, SP.DESCRIPCION, S.nombre_sede, cc.CENTRO_COSTO, CC.NOMBRE_DEPEND, UF.TIPO_UBICAC,UF.COD_UBICAC, UF.UBICAC_FISICA, p.nombre_completo, SP.NRO_SERIE, M.NOMBRE AS MARCA, SP.MODELO, SP.MEDIDAS, SP.CARACTERISTICAS, sp.OBSERVACIONES  
-FROM	SIG_PATRIMONIO AS SP
+    SELECT SP.SECUENCIA, SP.CODIGO_ACTIVO, SP.DESCRIPCION, SP.SECUENCIA, SP.ESTADO, SP.ESTADO_CONSERV, S.SEDE, S.nombre_sede, CC.CENTRO_COSTO, CC.NOMBRE_DEPEND, 
+        UF.TIPO_UBICAC, UF.COD_UBICAC, UF.UBICAC_FISICA, P.docum_ident, P.nombre_completo, SP.NRO_SERIE, M.NOMBRE AS MARCA, SP.MODELO, SP.MEDIDAS, 
+        SP.CARACTERISTICAS, SP.OBSERVACIONES  FROM	SIG_PATRIMONIO AS SP
 	INNER JOIN SIG_DETALLE_ACTIVOS AS DA ON (SP.ANO_EJE=DA.ANO_EJE AND SP.SEC_EJEC =DA.SEC_EJEC AND SP.SECUENCIA=DA.SECUENCIA AND SP.TIPO_MODALIDAD=DA.TIPO_MODALIDAD)
 	INNER JOIN SIG_CENTRO_COSTO AS CC ON (CC.ANO_EJE = SP.ANO_EJE AND CC.SEC_EJEC=SP.SEC_EJEC AND CC.CENTRO_COSTO = SP. CENTRO_COSTO)
 	INNER JOIN SIG_SEDES AS S ON (S.sede = SP.SEDE)
@@ -125,12 +170,9 @@ const getMarcas = async (req, res) => {
   try {
     const sqlQuery = `
     SELECT *
+    FROM 
+    SIG_UBICAC_FISICA
 
-FROM 
-    MARCA
-
-
-      
     `;
 
     // Ejecutar la consulta
@@ -211,5 +253,6 @@ module.exports = {
   getBienesPrueba,
   getDependencias,
   getUbicacion,
-  getMarcas
+  getMarcas,
+  getConsultaBienesSigaSbn,
 };
