@@ -13,27 +13,33 @@ const getData = async (req, res, next) => {
 
 const postDocumento = async (req, res, next) => {
   try {
-    // Obtener el último correlativo del año actual, si existe
+    // Obtener el año actual
+    const añoActual = new Date().getFullYear();
+
+    // Buscar el último documento del año actual
     const ultimoDocumento = await models.documento.findOne({
       attributes: ["correlativo"],
-      order: [["id", "DESC"]], // Ordenar por id en orden descendente
+      where: { anio: añoActual }, // Filtrar por el año actual
+      order: [["correlativo", "DESC"]], // Ordenar por correlativo en orden descendente
     });
 
-    let correlativo = ultimoDocumento ? ultimoDocumento.correlativo + 1 : 64;
+    // Calcular el nuevo correlativo
+    let correlativo = ultimoDocumento ? ultimoDocumento.correlativo + 1 : 1;
 
-    // Añadir el correlativo al body de la solicitud
-    const dataConCorrelativo = { ...req.body, correlativo };
+    // Añadir el año y el correlativo al body de la solicitud
+    const dataConAñoYCorrelativo = { ...req.body, correlativo, año: añoActual };
 
-    // Crear un nuevo registro en la tabla 'documento' con los datos del body de la solicitud
-    await models.documento.create(dataConCorrelativo);
+    // Crear un nuevo registro en la tabla 'documento'
+    await models.documento.create(dataConAñoYCorrelativo);
 
     // Enviar una respuesta con el nuevo registro creado
-    return res.status(201).json({ msg: "Adeudo guardado con éxito!" });
+    return res.status(201).json({ msg: "Documento guardado con éxito!", correlativo });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ msg: "Error al guardar el adeudo.", error });
+    res.status(500).json({ msg: "Error al guardar el documento.", error });
   }
 };
+
 
 module.exports = {
   getData,

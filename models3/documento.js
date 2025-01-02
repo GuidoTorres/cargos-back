@@ -60,7 +60,11 @@ module.exports = function (sequelize, DataTypes) {
       },
       usuario_id:{
         type: DataTypes.INTEGER,
-      }
+      },
+      anio:{
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
     },
     {
       tableName: "documento", // Nombre explícito de la tabla
