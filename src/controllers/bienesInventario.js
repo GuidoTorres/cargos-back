@@ -316,7 +316,7 @@ const getMarcas = async (req, res) => {
 const getUbicacion = async (req, res) => {
   try {
     const currentYear = '2024';
-
+    ///
 
     const sqlQuery = `
     SELECT 
