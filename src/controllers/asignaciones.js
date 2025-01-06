@@ -8,6 +8,8 @@ dayjs.extend(utc);
 
 const getData = async (req, res) => {
   try {
+    const currentYear = new Date().getFullYear();
+
     let { inicio, fin, search } = req.query;
     const inicial = inicio || "2020-01-01";
     const final = fin || "2024-12-31";
@@ -55,7 +57,7 @@ const getData = async (req, res) => {
     JOIN sig_patrimonio p ON
         sa.sec_ejec = p.sec_ejec AND
         sa.secuencia = p.secuencia
-    WHERE sa.ano_eje = 2024
+    WHERE sa.ano_eje = :currentYear
       AND sa.sec_ejec = 1137
       AND sa.tipo_modalidad = 1
       AND sa.nro_interno IS NOT NULL
@@ -68,7 +70,7 @@ const getData = async (req, res) => {
                   sa.centro_costo IN (
                       SELECT a.centro_costo
                       FROM sig_usuario_ccosto a
-                      WHERE a.ano_eje = 2024
+                      WHERE a.ano_eje = :currentYear
                           AND a.cuser_id = 'DMARIN'
                           AND a.sec_ejec = 1137
                   ) OR EXISTS (
@@ -85,7 +87,7 @@ const getData = async (req, res) => {
     `;
 
     const users = await sequelize.query(sqlQuery, {
-      replacements: { inicial, final, search: busqueda },
+      replacements: { inicial, final, search: busqueda, currentYear },
       type: QueryTypes.SELECT,
     });
 
@@ -583,7 +585,6 @@ const obtenerRegistrosConPatrimonio = async (req, res, next) => {
       return acc;
     }, {});
 
-    console.log(grupos);
 
     for (const key in grupos) {
       const correlativoGrupo = ++correlativo;
@@ -615,6 +616,59 @@ const obtenerRegistrosConPatrimonio = async (req, res, next) => {
   }
 };
 
+const actualizarCorrelativoUnoPorUno = async (req, res) => {
+  const transaction = await sequelize.transaction(); // Iniciar una transacción
+  try {
+    // Obtener los datos del cuerpo de la solicitud
+    const {
+      ano_eje,
+      secuencia,
+      nro_asignac,
+      ID_CORRELATIVO,
+    } = req.body;
+    console.log('====================================');
+    console.log(req.body);
+    console.log('====================================');
+    // Validar que los campos necesarios están presentes
+    if (
+      !ano_eje ||
+      !secuencia ||
+      !nro_asignac ||
+      !ID_CORRELATIVO
+    ) {
+      return res.status(400).json({
+        msg: "Faltan datos para actualizar el correlativo.",
+      });
+    }
+
+    // Condiciones para identificar el registro único
+    const condiciones = {
+      ano_eje,
+      secuencia,
+      nro_asignac
+    };
+
+    // Actualizar el ID_CORRELATIVO en el registro
+    await models.SIG_ASIGNACIONES.update(
+      { ID_CORRELATIVO },
+      { where: condiciones, transaction }
+    );
+
+    await transaction.commit(); // Confirmar la transacción
+    res.status(200).json({
+      msg: "Correlativo actualizado correctamente.",
+    });
+  } catch (error) {
+    await transaction.rollback(); // Revertir la transacción en caso de error
+    console.error("Error al actualizar el correlativo:", error);
+    res.status(500).json({
+      msg: "Error al actualizar el correlativo.",
+      error,
+    });
+  }
+};
+
+
 module.exports = {
   getData,
   getDataBienes,
@@ -622,4 +676,5 @@ module.exports = {
   actualizarCorrelativos,
   resetearCorrelativos,
   obtenerRegistrosConPatrimonio,
+  actualizarCorrelativoUnoPorUno
 };

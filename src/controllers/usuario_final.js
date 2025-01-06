@@ -8,6 +8,7 @@ const capitalizeFirstLetter = (string) => {
   };
   
 const getData = async(req,res) =>{
+  const currentYear = new Date().getFullYear();
 
     try {
         const sqlQuery = `
@@ -26,7 +27,7 @@ const getData = async(req,res) =>{
         SIG_PERSONAL ON SIG_PERSONAL.SEC_EJEC = SIG_PATRIMONIO.SEC_EJEC
         AND SIG_PERSONAL.EMPLEADO = SIG_PATRIMONIO.EMPLEADO_FINAL
     WHERE 
-        SIG_DETALLE_ACTIVOS.ANO_EJE = '2024' 
+        SIG_DETALLE_ACTIVOS.ANO_EJE = :currentYear 
         AND SIG_DETALLE_ACTIVOS.SEC_EJEC = '1137'
         AND SIG_DETALLE_ACTIVOS.TIPO_MODALIDAD = '1'
         AND NOT EXISTS (
@@ -35,7 +36,7 @@ const getData = async(req,res) =>{
             WHERE SIG_PATRIMONIO.SEC_EJEC = A.SEC_EJEC
                 AND SIG_PATRIMONIO.TIPO_MODALIDAD = A.TIPO_MODALIDAD
                 AND SIG_PATRIMONIO.EMPLEADO_FINAL = A.EMPLEADO_ENTREGA
-                AND A.ANO_EJE = '2024'
+                AND A.ANO_EJE = :currentYear
         )
     UNION
     SELECT 
@@ -49,7 +50,7 @@ const getData = async(req,res) =>{
         SIG_PERSONAL ON SIG_PERSONAL.SEC_EJEC = SIG_ASIGNACIONES.SEC_EJEC
         AND SIG_PERSONAL.EMPLEADO = SIG_ASIGNACIONES.EMPLEADO_FINAL_ENTR
     WHERE 
-        SIG_ASIGNACIONES.ANO_EJE = '2024'
+        SIG_ASIGNACIONES.ANO_EJE = :currentYear
         AND SIG_ASIGNACIONES.SEC_EJEC = '1137'
         AND SIG_ASIGNACIONES.TIPO_MODALIDAD = '1'
         AND SIG_ASIGNACIONES.NRO_ASIGNAC = (
@@ -69,6 +70,7 @@ const getData = async(req,res) =>{
         SIG_PERSONAL.APELLIDO_PATERNO ASC
       `;
       const users = await sequelize.query(sqlQuery, {
+        replacements:{currentYear},
         type: QueryTypes.SELECT,
       });
 

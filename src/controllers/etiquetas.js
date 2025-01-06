@@ -16,6 +16,7 @@ const getData = async (req, res, next) => {
 
 const getEtiquetas = async (req, res) => {
   try {
+    const currentYear = new Date().getFullYear();
 
     const sqlQuery = `
     SELECT DISTINCT 
@@ -35,7 +36,7 @@ const getEtiquetas = async (req, res) => {
     LEFT JOIN 
         ejecutora ON sig_patrimonio.sec_ejec = ejecutora.sec_ejec
     WHERE
-        sig_detalle_activos.ano_eje = 2024 
+        sig_detalle_activos.ano_eje = :currentYear 
         AND sig_detalle_activos.sec_ejec = 1137 
         AND sig_detalle_activos.tipo_modalidad = 1 
         AND sig_detalle_activos.tipo_movimto IN ('A','I') 
@@ -79,7 +80,7 @@ const getEtiquetas = async (req, res) => {
                 sig_patrimonio.sec_ejec = a.sec_ejec 
                 AND sig_patrimonio.tipo_modalidad = a.tipo_modalidad 
                 AND sig_patrimonio.secuencia = a.secuencia 
-                AND a.ano_eje = 2024
+                AND a.ano_eje = :currentYear
         )
     UNION
     SELECT DISTINCT 
@@ -110,7 +111,7 @@ const getEtiquetas = async (req, res) => {
         AND ('%' = '%' OR sig_patrimonio.grupo_bien = '%')
         AND ('%' = '%' OR sig_patrimonio.clase_bien = '%')
         AND (:familiaBien IS NULL OR sig_patrimonio.familia_bien = :familiaBien)
-        AND sig_detalle_activos.ano_eje = 2024 
+        AND sig_detalle_activos.ano_eje = :currentYear 
         AND (:startSeq IS NULL OR sig_patrimonio.secuencia >= :startSeq)
         AND (:endSeq IS NULL OR sig_patrimonio.secuencia <= :endSeq)
         AND (:startCodigoActivo IS NULL OR sig_patrimonio.codigo_activo >= :startCodigoActivo)
@@ -151,22 +152,6 @@ const getEtiquetas = async (req, res) => {
         )
         ORDER BY sig_patrimonio.secuencia DESC
   `;
-  console.log('====================================');
-  console.log({
-    familiaBien: req.query.familiaBien || null,
-    startSeq: req.query.startSeq || null,
-    endSeq: req.query.endSeq || null,
-    startCodigoActivo: req.query.startCodigoActivo || null,
-    endCodigoActivo: req.query.endCodigoActivo || null,
-    sede: req.query.sede || null,
-    pliego: req.query.pliego || null,
-    centroCosto: req.query.centroCosto || null,
-    tipoUbicac: req.query.tipoUbicac || null,
-    codUbicac: req.query.codUbicac || null,
-    empleadoFinal: req.query.empleadoFinal || null,
-    desc: req.query.desc ? `%${req.query.desc}%` : null
-  });
-  console.log('====================================');
     const etiquetas = await sequelize.query(sqlQuery, {
       replacements: {
         familiaBien: req.query.familiaBien || null,
@@ -180,7 +165,8 @@ const getEtiquetas = async (req, res) => {
         tipoUbicac: req.query.tipoUbicac || null,
         codUbicac: req.query.codUbicac || null,
         empleadoFinal: req.query.empleadoFinal || null,
-        desc: req.query.desc ? `%${req.query.desc}%` : null
+        desc: req.query.desc ? `%${req.query.desc}%` : null,
+        currentYear
       },
       type: QueryTypes.SELECT,
     });

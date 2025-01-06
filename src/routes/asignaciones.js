@@ -9,6 +9,7 @@ router.get("/bienes", asignaciones.getDataBienes)
 router.get("/prueba", asignaciones.resetearCorrelativos)
 router.get("/patrimonio", asignaciones.obtenerRegistrosConPatrimonio)
 router.put("/actualizar", asignaciones.actualizarCorrelativos)
+router.post("/actualizar/correlativo", asignaciones.actualizarCorrelativoUnoPorUno)
 router.put('/probar-correlativos', async (req, res) => {
     const t = await sequelize.transaction();
 
