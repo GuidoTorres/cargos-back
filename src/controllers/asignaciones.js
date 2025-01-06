@@ -8,7 +8,7 @@ dayjs.extend(utc);
 
 const getData = async (req, res) => {
   try {
-    const currentYear = new Date().getFullYear();
+    const currentYear = '2024';
 
     let { inicio, fin, search } = req.query;
     const inicial = inicio || "2020-01-01";
@@ -389,7 +389,7 @@ const updateObservacion = async (req, res, next) => {
 const actualizarCorrelativos = async (req, res, next) => {
   const transaction = await sequelize.transaction(); // Iniciar una transacción
   try {
-    const currentYear = new Date().getFullYear();
+    const currentYear = '2024';
 
     const ultimoCorrelativoRegistro = await models.SIG_ASIGNACIONES.findOne({
       attributes: [
@@ -518,7 +518,7 @@ const resetearCorrelativos = async (req, res, next) => {
 };
 const obtenerRegistrosConPatrimonio = async (req, res, next) => {
   try {
-    const currentYear = new Date().getFullYear();
+    const currentYear = '2024';
 
     // Obtener el último correlativo del año actual, si existe
     const ultimoCorrelativoRegistro = await models.SIG_ASIGNACIONES.findOne({

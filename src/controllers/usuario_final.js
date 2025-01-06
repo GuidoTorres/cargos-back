@@ -8,7 +8,7 @@ const capitalizeFirstLetter = (string) => {
   };
   
 const getData = async(req,res) =>{
-  const currentYear = new Date().getFullYear();
+  const currentYear = '2024';
 
     try {
         const sqlQuery = `

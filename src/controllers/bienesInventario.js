@@ -187,7 +187,7 @@ const getConsultaBienesSiga = async (req, res) => {
 
 const getConsultaBienesSigaSbn = async (req, res) => {
   try {
-    const currentYear = new Date().getFullYear();
+    const currentYear = '2024';
 
     const { sede_id, ubicacion_id, dni, sbn, serie } = req.query;
 
@@ -233,7 +233,7 @@ const getConsultaBienesSigaSbn = async (req, res) => {
 
 const getBienesPrueba = async (req, res) => {
   try {
-    const currentYear = new Date().getFullYear();
+    const currentYear = '2024';
 
     const sqlQuery = `
     SELECT SP.SECUENCIA, SP.CODIGO_ACTIVO, SP.DESCRIPCION, SP.SECUENCIA, SP.ESTADO, SP.ESTADO_CONSERV, S.SEDE, S.nombre_sede, CC.CENTRO_COSTO, CC.NOMBRE_DEPEND, 
@@ -315,7 +315,8 @@ const getMarcas = async (req, res) => {
 };
 const getUbicacion = async (req, res) => {
   try {
-    const currentYear = new Date().getFullYear();
+    const currentYear = '2024';
+
 
     const sqlQuery = `
     SELECT 
