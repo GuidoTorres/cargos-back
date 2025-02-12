@@ -8,11 +8,11 @@ dayjs.extend(utc);
 
 const getData = async (req, res) => {
   try {
-    const currentYear = '2024';
+    const currentYear = '2025';
 
     let { inicio, fin, search } = req.query;
-    const inicial = inicio || "2020-01-01";
-    const final = fin || "2024-12-31";
+    const inicial = inicio || "2025-01-01";
+    const final = fin || "2025-12-31";
     const busqueda = search ? search.toLowerCase() : "";
 
     const sqlQuery = `
