@@ -100,6 +100,132 @@ const getData = async (req, res) => {
       acc[key].push(user);
       return acc;
     }, {});
+    const totalRegistros = Object.values(grupos).length;
+
+    let format = Object.values(grupos).map((group, i) => {
+      const item = group[0]; // Tomar el primer registro del grupo
+      return {
+        ...item,
+        index:totalRegistros - i,
+        fecha_asig: dayjs.utc(item.fecha_asig).format("DD-MM-YYYY"),
+        fecha_asigna: dayjs.utc(item.fecha_asig).format("YYYY-MM-DD"),
+      };
+    });
+
+    if (busqueda) {
+      format = format.filter(
+        (item) =>
+          item.patrimonio_nro_orden
+            .toString()
+            .toLowerCase()
+            .includes(busqueda) ||
+          item.para_usuario.toLowerCase().includes(busqueda)
+      );
+    }
+
+    return res.status(200).json({ data: format });
+  } catch (error) {
+    res.status(500).json();
+    console.log("====================================");
+    console.log(error);
+    console.log("====================================");
+  }
+};
+
+const pruebaGetDataAsignacion = async (req, res) => {
+  try {
+    const currentYear = '2025';
+
+    let { inicio, fin, search } = req.query;
+    const inicial = inicio || "2025-01-01";
+    const final = fin || "2025-12-31";
+    const busqueda = search ? search.toLowerCase() : "";
+
+    const sqlQuery = `
+    SELECT 
+      sa.nro_interno,
+      (CASE WHEN 'S'='S' THEN spa.nombre_completo ELSE spc.nombre_completo END) AS de_usuario,
+      (CASE WHEN 'S'='S' THEN spb.nombre_completo ELSE spd.nombre_completo END) AS para_usuario,
+      sa.fecha_asig,
+      sa.sede_entrega,
+      sa.pliego_entrega,
+      sa.id_correlativo,
+      sa.secuencia,
+      sa.ano_eje,
+      sa.sec_ejec,
+      sa.tipo_modalidad,
+      sa.nro_asignac,
+      sa.centro_costo,
+      sa.cod_ubicac,
+      sa.centro_entrega,
+      sa.tipo_ubicac,
+      sa.id_correlativo,
+      spa.nombre_completo AS nombre_empleado_final,
+      spc.nombre_completo AS nombre_empleado,
+      (CASE WHEN 'S'='S' THEN sa.empleado_final ELSE sa.empleado END) AS de_cod_usuario,
+      (CASE WHEN 'S'='S' THEN sa.empleado_final_entr ELSE sa.empleado_entrega END) AS para_cod_usuario,
+      CAST(sa.observaciones AS varchar(max)) AS observaciones,
+      p.empleado_final AS patrimonio_empleado_final,
+      p.nro_orden AS patrimonio_nro_orden
+    FROM sig_asignaciones sa
+    JOIN sig_personal spa ON
+        sa.sec_ejec = spa.sec_ejec AND  
+        sa.empleado_final = spa.empleado 
+    JOIN sig_personal spb ON
+        sa.sec_ejec = spb.sec_ejec AND 
+        sa.empleado_final_entr = spb.empleado
+    JOIN sig_personal spc ON
+        sa.sec_ejec = spc.sec_ejec AND  
+        sa.empleado = spc.empleado 
+    JOIN sig_personal spd ON
+        sa.sec_ejec = spd.sec_ejec AND 
+        sa.empleado_entrega = spd.empleado 
+    JOIN sig_patrimonio p ON
+        sa.sec_ejec = p.sec_ejec AND
+        sa.secuencia = p.secuencia
+    WHERE sa.ano_eje = :currentYear
+      AND sa.sec_ejec = 1137
+      AND sa.tipo_modalidad = 1
+      AND sa.nro_interno IS NOT NULL
+      AND sa.fecha_asig >= :inicial
+      AND sa.fecha_asig <= :final
+      AND p.nro_orden IS NOT NULL
+      AND (
+          :search = '%' OR (
+              :search <> '%' AND (
+                  sa.centro_costo IN (
+                      SELECT a.centro_costo
+                      FROM sig_usuario_ccosto a
+                      WHERE a.ano_eje = :currentYear
+                          AND a.cuser_id = 'DMARIN'
+                          AND a.sec_ejec = 1137
+                  ) OR EXISTS (
+                      SELECT CUSER_ID
+                      FROM SIG_USUARIO_EJECUTORA
+                      WHERE SIG_USUARIO_EJECUTORA.CUSER_ID = 'DMARIN'
+                          AND SIG_USUARIO_EJECUTORA.SEC_EJEC = 1137
+                          AND SIG_USUARIO_EJECUTORA.FLAG_CCOSTO = 'S'
+                  )
+              )
+          )
+      )
+    ORDER BY sa.fecha_asig DESC, sa.secuencia DESC
+    `;
+
+    const users = await sequelize.query(sqlQuery, {
+      replacements: { inicial, final, search: busqueda, currentYear },
+      type: QueryTypes.SELECT,
+    });
+
+    // Agrupar registros por patrimonio_empleado_final y patrimonio_nro_orden
+    const grupos = users.reduce((acc, user) => {
+      const key = `${user.patrimonio_empleado_final}-${user.patrimonio_nro_orden}`;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(user);
+      return acc;
+    }, {});
 
     let format = Object.values(grupos).map((group) => {
       const item = group[0]; // Tomar el primer registro del grupo
@@ -121,7 +247,7 @@ const getData = async (req, res) => {
       );
     }
 
-    return res.status(200).json({ data: format });
+    return res.status(200).json({ data: users });
   } catch (error) {
     res.status(500).json();
     console.log("====================================");
@@ -676,5 +802,6 @@ module.exports = {
   actualizarCorrelativos,
   resetearCorrelativos,
   obtenerRegistrosConPatrimonio,
-  actualizarCorrelativoUnoPorUno
+  actualizarCorrelativoUnoPorUno,
+  pruebaGetDataAsignacion
 };

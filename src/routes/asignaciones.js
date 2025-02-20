@@ -5,6 +5,7 @@ const asignaciones = require("../controllers/asignaciones");
 const {models} = require('./../../config/database')
 
 router.get("/", asignaciones.getData)
+router.get("/prueba/get", asignaciones.pruebaGetDataAsignacion)
 router.get("/bienes", asignaciones.getDataBienes)
 router.get("/prueba", asignaciones.resetearCorrelativos)
 router.get("/patrimonio", asignaciones.obtenerRegistrosConPatrimonio)

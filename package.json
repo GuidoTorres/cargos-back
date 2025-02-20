@@ -1,15 +1,22 @@
 {
-  "name": "codigobarras",
+  "name": "cargos-back",
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
+  "bin": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon app.js"
-  },
+    "dev": "nodemon app.js",
+    "start": "node app.js",
+    "build": "pkg ."  },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "pkg": {
+    "assets": [
+      "build/**/*"
+    ]
+  },
   "dependencies": {
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
