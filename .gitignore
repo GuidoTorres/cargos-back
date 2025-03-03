@@ -2,7 +2,7 @@
 node_modules
 /.pnp
 .pnp.js
-
+cargos-back/
 auditoria.txt
 public/images
 # testing
