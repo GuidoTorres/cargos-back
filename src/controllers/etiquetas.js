@@ -16,7 +16,7 @@ const getData = async (req, res, next) => {
 
 const getEtiquetas = async (req, res) => {
   try {
-    const currentYear = '2024';
+    const currentYear = '2025';
 
     const sqlQuery = `
     SELECT DISTINCT 
