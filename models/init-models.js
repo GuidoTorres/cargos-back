@@ -773,7 +773,6 @@ var _VALIDA_CADENA_X_UNID_MEDIDA = require("./VALIDA_CADENA_X_UNID_MEDIDA");
 var _VALIDA_CAD_X_UNID_MEDIDA_TMP = require("./VALIDA_CAD_X_UNID_MEDIDA_TMP");
 var _VALIDA_PROG_ESTRATEGICO = require("./VALIDA_PROG_ESTRATEGICO");
 var _XXX_MIGRA_2016_MAESTRO = require("./XXX_MIGRA_2016_MAESTRO");
-var _aaa = require("./aaa");
 var _acumulado_encargo = require("./acumulado_encargo");
 var _cert_cab = require("./cert_cab");
 var _cert_det = require("./cert_det");
@@ -1717,7 +1716,6 @@ function initModels(sequelize) {
   var VALIDA_CAD_X_UNID_MEDIDA_TMP = _VALIDA_CAD_X_UNID_MEDIDA_TMP(sequelize, DataTypes);
   var VALIDA_PROG_ESTRATEGICO = _VALIDA_PROG_ESTRATEGICO(sequelize, DataTypes);
   var XXX_MIGRA_2016_MAESTRO = _XXX_MIGRA_2016_MAESTRO(sequelize, DataTypes);
-  var aaa = _aaa(sequelize, DataTypes);
   var acumulado_encargo = _acumulado_encargo(sequelize, DataTypes);
   var cert_cab = _cert_cab(sequelize, DataTypes);
   var cert_det = _cert_det(sequelize, DataTypes);
@@ -6230,7 +6228,6 @@ function initModels(sequelize) {
     VALIDA_CAD_X_UNID_MEDIDA_TMP,
     VALIDA_PROG_ESTRATEGICO,
     XXX_MIGRA_2016_MAESTRO,
-    aaa,
     acumulado_encargo,
     cert_cab,
     cert_det,
