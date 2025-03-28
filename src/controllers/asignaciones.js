@@ -65,22 +65,24 @@ const getData = async (req, res) => {
       AND sa.fecha_asig <= :final
       AND p.nro_orden IS NOT NULL
       AND (
-          :search = '%' OR (
-              :search <> '%' AND (
-                  sa.centro_costo IN (
-                      SELECT a.centro_costo
-                      FROM sig_usuario_ccosto a
-                      WHERE a.ano_eje = :currentYear
-                          AND a.cuser_id = 'DMARIN'
-                          AND a.sec_ejec = 1137
-                  ) OR EXISTS (
-                      SELECT CUSER_ID
-                      FROM SIG_USUARIO_EJECUTORA
-                      WHERE SIG_USUARIO_EJECUTORA.CUSER_ID = 'DMARIN'
-                          AND SIG_USUARIO_EJECUTORA.SEC_EJEC = 1137
-                          AND SIG_USUARIO_EJECUTORA.FLAG_CCOSTO = 'S'
-                  )
-              )
+          :search = '' OR (
+              LOWER(spa.nombre_completo) LIKE LOWER('%' + :search + '%') OR
+              CAST(p.nro_orden AS VARCHAR) LIKE '%' + :search + '%'
+          )
+      )
+      AND (
+          sa.centro_costo IN (
+              SELECT a.centro_costo
+              FROM sig_usuario_ccosto a
+              WHERE a.ano_eje = :currentYear
+                  AND a.cuser_id = 'DMARIN'
+                  AND a.sec_ejec = 1137
+          ) OR EXISTS (
+              SELECT CUSER_ID
+              FROM SIG_USUARIO_EJECUTORA
+              WHERE SIG_USUARIO_EJECUTORA.CUSER_ID = 'DMARIN'
+                  AND SIG_USUARIO_EJECUTORA.SEC_EJEC = 1137
+                  AND SIG_USUARIO_EJECUTORA.FLAG_CCOSTO = 'S'
           )
       )
     ORDER BY sa.fecha_asig DESC, sa.secuencia DESC
@@ -112,16 +114,7 @@ const getData = async (req, res) => {
       };
     });
 
-    if (busqueda) {
-      format = format.filter(
-        (item) =>
-          item.patrimonio_nro_orden
-            .toString()
-            .toLowerCase()
-            .includes(busqueda) ||
-          item.para_usuario.toLowerCase().includes(busqueda)
-      );
-    }
+    // La búsqueda ya se realiza en la consulta SQL
 
     return res.status(200).json({ data: format });
   } catch (error) {
@@ -191,22 +184,24 @@ const pruebaGetDataAsignacion = async (req, res) => {
       AND sa.fecha_asig <= :final
       AND p.nro_orden IS NOT NULL
       AND (
-          :search = '%' OR (
-              :search <> '%' AND (
-                  sa.centro_costo IN (
-                      SELECT a.centro_costo
-                      FROM sig_usuario_ccosto a
-                      WHERE a.ano_eje = :currentYear
-                          AND a.cuser_id = 'DMARIN'
-                          AND a.sec_ejec = 1137
-                  ) OR EXISTS (
-                      SELECT CUSER_ID
-                      FROM SIG_USUARIO_EJECUTORA
-                      WHERE SIG_USUARIO_EJECUTORA.CUSER_ID = 'DMARIN'
-                          AND SIG_USUARIO_EJECUTORA.SEC_EJEC = 1137
-                          AND SIG_USUARIO_EJECUTORA.FLAG_CCOSTO = 'S'
-                  )
-              )
+          :search = '' OR (
+              LOWER(spa.nombre_completo) LIKE LOWER('%' + :search + '%') OR
+              CAST(p.nro_orden AS VARCHAR) LIKE '%' + :search + '%'
+          )
+      )
+      AND (
+          sa.centro_costo IN (
+              SELECT a.centro_costo
+              FROM sig_usuario_ccosto a
+              WHERE a.ano_eje = :currentYear
+                  AND a.cuser_id = 'DMARIN'
+                  AND a.sec_ejec = 1137
+          ) OR EXISTS (
+              SELECT CUSER_ID
+              FROM SIG_USUARIO_EJECUTORA
+              WHERE SIG_USUARIO_EJECUTORA.CUSER_ID = 'DMARIN'
+                  AND SIG_USUARIO_EJECUTORA.SEC_EJEC = 1137
+                  AND SIG_USUARIO_EJECUTORA.FLAG_CCOSTO = 'S'
           )
       )
     ORDER BY sa.fecha_asig DESC, sa.secuencia DESC
@@ -236,18 +231,9 @@ const pruebaGetDataAsignacion = async (req, res) => {
       };
     });
 
-    if (busqueda) {
-      format = format.filter(
-        (item) =>
-          item.patrimonio_nro_orden
-            .toString()
-            .toLowerCase()
-            .includes(busqueda) ||
-          item.para_usuario.toLowerCase().includes(busqueda)
-      );
-    }
+    // La búsqueda ya se realiza en la consulta SQL
 
-    return res.status(200).json({ data: users });
+    return res.status(200).json({ data: format });
   } catch (error) {
     res.status(500).json();
     console.log("====================================");
