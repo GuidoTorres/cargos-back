@@ -187,7 +187,7 @@ const getConsultaBienesSiga = async (req, res) => {
 
 const getConsultaBienesSigaSbn = async (req, res) => {
   try {
-    const currentYear = '2024';
+    const currentYear = '2025';
 
     const { sede_id, ubicacion_id, dni, sbn, serie } = req.query;
 
