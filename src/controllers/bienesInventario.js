@@ -368,7 +368,7 @@ async function getBienesFiltrados(req, res) {
         AND DA.TIPO_MOVIMTO   IN ('A','I')
         AND LEFT(SP.CODIGO_ACTIVO, 8) IN (${inList})
         AND YEAR(SP.FECHA_REG) = :year
-      ORDER BY SP.CODIGO_ACTIVO;
+      ORDER BY SP.FECHA_REG DESC;
     `;
 
     const bienes = await sequelize.query(sql, {
