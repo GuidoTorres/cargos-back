@@ -187,7 +187,7 @@ const getConsultaBienesSiga = async (req, res) => {
 
 const getConsultaBienesSigaSbn = async (req, res) => {
   try {
-    const currentYear = '2025';
+    const currentYear = "2025";
 
     const { sede_id, ubicacion_id, dni, sbn, serie } = req.query;
 
@@ -197,7 +197,7 @@ const getConsultaBienesSigaSbn = async (req, res) => {
       `;
 
     // Agregar filtros dinámicos si están presentes
-    const replacements = {currentYear};
+    const replacements = { currentYear };
 
     if (sbn) {
       whereClause += ` AND SP.CODIGO_ACTIVO = :sbn`;
@@ -233,7 +233,7 @@ const getConsultaBienesSigaSbn = async (req, res) => {
 
 const getBienesPrueba = async (req, res) => {
   try {
-    const currentYear = '2025';
+    const currentYear = "2025";
 
     const sqlQuery = `
     SELECT SP.SECUENCIA, SP.CODIGO_ACTIVO, SP.DESCRIPCION, SP.ESTADO, SP.ESTADO_CONSERV, S.SEDE, S.nombre_sede, CC.CENTRO_COSTO, CC.NOMBRE_DEPEND, 
@@ -252,7 +252,7 @@ ORDER BY SP.CODIGO_ACTIVO
 
     // Ejecutar la consulta
     const bienes = await sequelize.query(sqlQuery, {
-      replacements:{currentYear},
+      replacements: { currentYear },
       type: QueryTypes.SELECT,
     });
 
@@ -266,24 +266,59 @@ ORDER BY SP.CODIGO_ACTIVO
 };
 
 const PREFIXES = [
-  "74222358","95228627","74089500","74084100","74088187",
-  "74083200","95228287","74089950","95228117","95221467",
-  "74081850","95225812","74087700","74080500","74088224",
-  "95226644","74083650","95227834","74089556","95226742",
-  "74222726","74088037","74084550","74087250","95228363",
-  "74229950","95221561","95225815","74080050","95223791",
-  "74083875","74085000","74227274","95227536","95221470",
-  "74080950","74089200","95225907","95221816","95222166",
-  "95226115","74080275","95227044"
+  "74222358",
+  "95228627",
+  "74089500",
+  "74084100",
+  "74088187",
+  "74083200",
+  "95228287",
+  "74089950",
+  "95228117",
+  "95221467",
+  "74081850",
+  "95225812",
+  "74087700",
+  "74080500",
+  "74088224",
+  "95226644",
+  "74083650",
+  "95227834",
+  "74089556",
+  "95226742",
+  "74222726",
+  "74088037",
+  "74084550",
+  "74087250",
+  "95228363",
+  "74229950",
+  "95221561",
+  "95225815",
+  "74080050",
+  "95223791",
+  "74083875",
+  "74085000",
+  "74227274",
+  "95227536",
+  "95221470",
+  "74080950",
+  "74089200",
+  "95225907",
+  "95221816",
+  "95222166",
+  "95226115",
+  "74080275",
+  "95227044",
 ];
 
 async function getBienesFiltrados(req, res) {
   try {
-    // Año por query-param o 2025 por defecto
-    const year = parseInt(req.query.anio, 10) || 2025;
+    
+    const currentYear =new Date().getFullYear()
+    const year = parseInt(req.query.anio, 10) || new Date().getFullYear();
 
     // Construimos la lista de literales para el IN (...)
-    const inList = PREFIXES.map(p => `'${p}'`).join(',');
+    const inList = PREFIXES.map((p) => `'${p}'`).join(",");
 
     const sql = `
       SELECT
@@ -306,7 +341,8 @@ async function getBienesFiltrados(req, res) {
         SP.MODELO,
         SP.MEDIDAS,
         SP.CARACTERISTICAS,
-        SP.OBSERVACIONES
+        SP.OBSERVACIONES,
+        SP.FECHA_REG
       FROM SIG_PATRIMONIO SP
       INNER JOIN SIG_DETALLE_ACTIVOS DA
         ON SP.ANO_EJE        = DA.ANO_EJE
@@ -328,28 +364,29 @@ async function getBienesFiltrados(req, res) {
       INNER JOIN MARCA M
         ON M.MARCA      = SP.MARCA
        AND M.TIPO_MARCA = SP.TIPO_MARCA
-      WHERE DA.ANO_EJE        = ${year}
+      WHERE DA.ANO_EJE= :currentYear
         AND DA.TIPO_MOVIMTO   IN ('A','I')
         AND LEFT(SP.CODIGO_ACTIVO, 8) IN (${inList})
+        AND YEAR(SP.FECHA_REG) = :year
       ORDER BY SP.CODIGO_ACTIVO;
     `;
 
     const bienes = await sequelize.query(sql, {
+      replacements: { currentYear, year },
       type: QueryTypes.SELECT,
     });
 
     return res.status(200).json({
       cantidad: bienes.length,
-      data:     bienes
+      data: bienes,
     });
   } catch (error) {
-    console.error('Error en getBienesFiltrados:', error);
+    console.error("Error en getBienesFiltrados:", error);
     return res.status(500).json({
-      message: 'Error al obtener bienes filtrados.'
+      message: "Error al obtener bienes filtrados.",
     });
   }
 }
-
 
 const getDependencias = async (req, res) => {
   try {
@@ -398,7 +435,7 @@ const getMarcas = async (req, res) => {
 };
 const getUbicacion = async (req, res) => {
   try {
-    const currentYear = '2024';
+    const currentYear = "2024";
     ///
 
     const sqlQuery = `
@@ -431,7 +468,7 @@ ORDER BY
 
     // Ejecutar la consulta
     const bienes = await sequelize.query(sqlQuery, {
-      replacements:{currentYear},
+      replacements: { currentYear },
       type: QueryTypes.SELECT,
     });
 
@@ -467,5 +504,5 @@ module.exports = {
   getUbicacion,
   getMarcas,
   getConsultaBienesSigaSbn,
-  getBienesFiltrados
+  getBienesFiltrados,
 };
