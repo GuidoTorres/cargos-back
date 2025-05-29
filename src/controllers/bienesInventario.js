@@ -342,7 +342,8 @@ async function getBienesFiltrados(req, res) {
         SP.MEDIDAS,
         SP.CARACTERISTICAS,
         SP.OBSERVACIONES,
-        SP.FECHA_REG
+        SP.FECHA_REG, 
+        SP.ESTADO_CONSERV
       FROM SIG_PATRIMONIO SP
       INNER JOIN SIG_DETALLE_ACTIVOS DA
         ON SP.ANO_EJE        = DA.ANO_EJE
