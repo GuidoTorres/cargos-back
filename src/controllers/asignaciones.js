@@ -8,11 +8,11 @@ dayjs.extend(utc);
 
 const getData = async (req, res) => {
   try {
-    const currentYear = '2025';
+    const currentYear = String(new Date().getFullYear()); // <<< CAMBIO: dinamico
 
     let { inicio, fin, search } = req.query;
-    const inicial = inicio || "2025-01-01";
-    const final = fin || "2025-12-31";
+    const inicial = inicio || `${currentYear}-01-01`; // <<< CAMBIO: dinamico
+    const final = fin || `${currentYear}-12-31`; // <<< CAMBIO: dinamico
     const busqueda = search ? search.toLowerCase() : "";
 
     const sqlQuery = `
@@ -127,11 +127,11 @@ const getData = async (req, res) => {
 
 const pruebaGetDataAsignacion = async (req, res) => {
   try {
-    const currentYear = '2025';
+    const currentYear = String(new Date().getFullYear()); // <<< CAMBIO: dinamico
 
     let { inicio, fin, search } = req.query;
-    const inicial = inicio || "2025-01-01";
-    const final = fin || "2025-12-31";
+    const inicial = inicio || `${currentYear}-01-01`; // <<< CAMBIO: dinamico
+    const final = fin || `${currentYear}-12-31`; // <<< CAMBIO: dinamico
     const busqueda = search ? search.toLowerCase() : "";
 
     const sqlQuery = `

@@ -1,0 +1,14 @@
+﻿Revertí los últimos cambios de “años dinámicos” y dejé solo el de asignaciones para mostrar cargos (getData/pruebaGetDataAsignacion).
+
+Revertido:
+- src/controllers/usuario_final.js: currentYear volvió a '2024'.
+- src/controllers/etiquetas.js: currentYear volvió a '2025'.
+- src/controllers/bienesInventario.js: currentYear volvió a '2025' / '2024' y DA.ANO_EJE='2025'.
+- src/controllers/asignaciones.js:
+  - getDataBienes volvió a usar 2024 fijo en el SQL.
+  - actualizarCorrelativos y obtenerRegistrosConPatrimonio volvieron a currentYear='2024'.
+
+Se mantiene dinámico SOLO en:
+- src/controllers/asignaciones.js → getData y pruebaGetDataAsignacion (cargos).
+
+Reinicia el server para aplicar.
